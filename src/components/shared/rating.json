@@ -1,0 +1,21 @@
+{
+  "collectionName": "components_shared_ratings",
+  "info": {
+    "displayName": "Rating"
+  },
+  "options": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "text"
+    },
+    "rating": {
+      "type": "decimal",
+      "min": 0,
+      "max": 5
+    }
+  },
+  "config": {}
+}
