@@ -1,0 +1,26 @@
+# docker-compose.prod.yml
+version: '3.8'
+
+services:
+  strapi:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: strapi-prod
+    ports:
+      - "1337:1337"
+    volumes:
+      - uploads-volume:/app/public/uploads
+      - data-volume:/app/.tmp
+    environment:
+      NODE_ENV: production
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:1337/_health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  uploads-volume:
+  data-volume:

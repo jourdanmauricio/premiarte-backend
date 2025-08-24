@@ -1,0 +1,25 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copiar package.json primero para cachear dependencias
+COPY package*.json ./
+
+# Instalar todas las dependencias (incluyendo devDependencies)
+RUN npm install
+
+# Copiar todo el código fuente
+COPY . .
+
+# Exponer el puerto de Strapi
+EXPOSE 1337
+
+# Usar develop para hot reload
+CMD ["npm", "run", "develop"]
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+EXPOSE 1337
+CMD ["npm", "run", "develop"]

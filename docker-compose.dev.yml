@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  strapi:
+    build: .
+    container_name: strapi-app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      DATABASE_CLIENT: sqlite
+      DATABASE_FILENAME: .tmp/data.db
+    ports:
+      - "1337:1337"
+    volumes:
+      - .:/app
+      - uploads-volume:/app/public/uploads
+      - data-volume:/app/.tmp
+    networks:
+      - strapi-network
+
+volumes:
+  uploads-volume:
+  data-volume:
+
+networks:
+  strapi-network:
+    driver: bridge

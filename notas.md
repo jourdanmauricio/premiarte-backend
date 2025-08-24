@@ -59,3 +59,33 @@ export default factories.createCoreRouter('api::product.product', {
   } 
 });
 ```
+
+
+# DOCKER
+--------
+
+# Para desarrollo con reconstrucción
+docker-compose -f docker-compose.dev.yml up --build
+
+# Para producción
+docker-compose -f docker-compose.prod.yml up --build -d
+
+
+# 1. Construir y ejecutar por primera vez
+docker-compose up --build
+
+# 2. Hacer cambios en tu código...
+# (Los cambios se reflejan automáticamente gracias al volumen)
+
+# 3. Si agregas nuevas dependencias:
+# Editar package.json -> luego:
+docker-compose up --build
+
+# 4. Si modificas el Dockerfile:
+docker-compose up --build
+
+# 5. Para detener:
+docker-compose down
+
+# 6. Para eliminar todo incluyendo volúmenes (¡cuidado!):
+docker-compose down -v

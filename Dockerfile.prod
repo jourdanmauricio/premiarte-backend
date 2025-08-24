@@ -1,0 +1,34 @@
+# Dockerfile.prod
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# Copiar package.json
+COPY package*.json ./
+
+# Instalar solo dependencias de producción
+RUN npm ci --only=production
+
+# Etapa final más liviana
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copiar node_modules desde la etapa builder
+COPY --from=builder /app/node_modules ./node_modules
+
+# Copiar aplicación
+COPY . .
+
+# Construir la aplicación
+RUN npm run build
+
+# Exponer puerto
+EXPOSE 1337
+
+# Salud de la aplicación
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD curl -f http://localhost:1337/_health || exit 1
+
+# Usar start para producción
+CMD ["npm", "start"]
