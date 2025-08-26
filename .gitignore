@@ -130,3 +130,4 @@ build
 .strapi-updater.json
 .strapi-cloud.json
 notas.md
+migrate-strapi-db.sh

@@ -7,3 +7,5 @@ README.md
 .DS_Store
 dist
 build
+notas.md
+migrate-strapi-db.sh
