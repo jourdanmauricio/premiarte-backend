@@ -7,8 +7,8 @@ services:
       context: .
       dockerfile: Dockerfile.prod
     container_name: strapi-prod
-    ports:
-      - "1337:1337"
+    expose:
+      - "1337"
     volumes:
       - uploads-volume:/app/public/uploads
       - data-volume:/app/.tmp
@@ -20,6 +20,12 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - coolify
+  
+networks:
+  coolify:
+    external: true
 
 volumes:
   uploads-volume:

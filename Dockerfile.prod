@@ -12,6 +12,9 @@ RUN npm ci --only=production
 # Etapa final más liviana
 FROM node:18-alpine
 
+# INSTALAR CURL para health check
+RUN apk add --no-cache curl
+
 WORKDIR /app
 
 # Copiar node_modules desde la etapa builder
