@@ -22,11 +22,6 @@ services:
       retries: 3
     networks:
       - coolify
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.strapi-custom.rule=Host(`premiarteserver.lumau.com.ar`)"
-      - "traefik.http.routers.strapi-custom.entrypoints=http"
-      - "traefik.http.services.strapi-custom.loadbalancer.server.port=1337"      
   
 networks:
   coolify:
