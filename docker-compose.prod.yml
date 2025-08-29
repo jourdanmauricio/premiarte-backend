@@ -22,17 +22,6 @@ services:
       retries: 3
     networks:
       - coolify
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.premiarteserver.rule=Host(`premiarteserver.lumau.com.ar`)"
-      - "traefik.http.routers.premiarteserver.entrypoints=websecure"
-      - "traefik.http.routers.premiarteserver.tls.certresolver=letsencrypt"
-      - "traefik.http.services.premiarteserver.loadbalancer.server.port=1337"
-      - "traefik.docker.network=coolify"
-      - "traefik.http.routers.premiarteserver-http.rule=Host(`premiarteserver.lumau.com.ar`)"
-      - "traefik.http.routers.premiarteserver-http.entrypoints=web"
-      - "traefik.http.routers.premiarteserver-http.middlewares=redirect-to-https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"      
   
 networks:
   coolify:
