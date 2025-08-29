@@ -14,7 +14,7 @@ services:
       - data-volume:/app/.tmp
     environment:
       NODE_ENV: production
-      HOST: 0.0.0.0
+      HOST: https://premiarteserver.lumau.com.ar
       PORT: 1337
       DATABASE_CLIENT: sqlite
       DATABASE_FILENAME: .tmp/data.db
