@@ -19,7 +19,7 @@ export default (config, { strapi }: { strapi: Core.Strapi }) => {
         },
          slider: {
            populate: {
-              button: true,
+             button: true,
              card: {
                fields: ['title', 'description'],
                populate: {
