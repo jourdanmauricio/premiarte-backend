@@ -26,11 +26,12 @@ export default ({ env }) => ({
         api_secret: env('CLOUDINARY_SECRET'),
       },
       actionOptions: {
-        // upload: {},
         upload: {
-          folder: env('CLOUDINARY_FOLDER', 'premiarte'), // Carpeta por defecto
+          folder: 'Premiarte',
         },
-        delete: {},
+        uploadStream: {
+          folder: 'Premiarte',
+        },
       },
     },
   },
