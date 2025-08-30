@@ -4,4 +4,10 @@
 
 import { factories } from '@strapi/strapi';
 
-export default factories.createCoreRouter('api::home.home');
+export default factories.createCoreRouter('api::home.home', {
+  config: {
+    find: {
+      middlewares: ['api::home.home-populate'],
+    }  
+  } 
+});
