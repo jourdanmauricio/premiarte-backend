@@ -131,3 +131,5 @@ build
 .strapi-cloud.json
 notas.md
 migrate-strapi-db.sh
+notas.md
+migrate-db.md
