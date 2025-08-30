@@ -37,6 +37,11 @@
     "productsTitle": {
       "type": "string",
       "required": true
+    },
+    "slider": {
+      "type": "component",
+      "component": "shared.slide",
+      "repeatable": true
     }
   }
 }

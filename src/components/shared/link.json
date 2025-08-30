@@ -8,11 +8,11 @@
     "href": {
       "type": "string",
       "default": "#",
-      "required": true
+      "required": false
     },
     "label": {
       "type": "string",
-      "required": true
+      "required": false
     },
     "isExternal": {
       "type": "boolean",

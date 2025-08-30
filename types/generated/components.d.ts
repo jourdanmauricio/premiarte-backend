@@ -44,12 +44,10 @@ export interface SharedLink extends Struct.ComponentSchema {
     displayName: 'Link';
   };
   attributes: {
-    href: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<'#'>;
+    href: Schema.Attribute.String & Schema.Attribute.DefaultTo<'#'>;
     isButtonLink: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     isExternal: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
-    label: Schema.Attribute.String & Schema.Attribute.Required;
+    label: Schema.Attribute.String;
     type: Schema.Attribute.Enumeration<['PRIMARY', 'SECONDARY']>;
   };
 }
@@ -142,22 +140,20 @@ export interface SharedSimpleCard extends Struct.ComponentSchema {
     displayName: 'Simple Card';
   };
   attributes: {
-    description: Schema.Attribute.Blocks & Schema.Attribute.Required;
-    image: Schema.Attribute.Media<'images' | 'files'> &
-      Schema.Attribute.Required;
-    title: Schema.Attribute.String & Schema.Attribute.Required;
+    description: Schema.Attribute.Blocks;
+    image: Schema.Attribute.Media<'images' | 'files'>;
+    title: Schema.Attribute.String;
   };
 }
 
-export interface SharedSlider extends Struct.ComponentSchema {
-  collectionName: 'components_shared_sliders';
+export interface SharedSlide extends Struct.ComponentSchema {
+  collectionName: 'components_shared_slides';
   info: {
-    description: '';
-    displayName: 'Slider';
-    icon: 'address-book';
+    displayName: 'Slide';
   };
   attributes: {
-    files: Schema.Attribute.Media<'images', true>;
+    button: Schema.Attribute.Component<'shared.link', false>;
+    card: Schema.Attribute.Component<'shared.simple-card', false>;
   };
 }
 
@@ -175,7 +171,7 @@ declare module '@strapi/strapi' {
       'shared.rich-text': SharedRichText;
       'shared.seo': SharedSeo;
       'shared.simple-card': SharedSimpleCard;
-      'shared.slider': SharedSlider;
+      'shared.slide': SharedSlide;
     }
   }
 }
