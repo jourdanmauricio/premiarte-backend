@@ -13,6 +13,9 @@ export default (config, { strapi }) => {
         image: {
           fields: ['alternativeText', 'url'], // Selecciona campos específicos de la imagen
         },
+        products: {
+          count: true, // Esto contará los productos relacionados
+        }
       },
       fields: ['name', 'description', 'slug', 'featured'], // Campos de la categoría
     };
