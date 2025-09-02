@@ -10,11 +10,6 @@
       "component": "shared.logo-link",
       "repeatable": false
     },
-    "navItems": {
-      "type": "component",
-      "component": "shared.link",
-      "repeatable": true
-    },
     "socialLinks": {
       "type": "component",
       "component": "shared.logo-link",

@@ -29,7 +29,6 @@ const populate = {
             }
           }
         },
-        navItems: true
       }
     },
     footer: {
@@ -41,7 +40,6 @@ const populate = {
             }
           }
         },
-        navItems: true,
         socialLinks: {
           populate: {
             image: {

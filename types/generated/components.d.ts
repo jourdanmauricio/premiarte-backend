@@ -21,7 +21,6 @@ export interface LayoutFooter extends Struct.ComponentSchema {
     description: Schema.Attribute.Blocks;
     design: Schema.Attribute.Component<'shared.link', true>;
     logo: Schema.Attribute.Component<'shared.logo-link', false>;
-    navItems: Schema.Attribute.Component<'shared.link', true>;
     socialLinks: Schema.Attribute.Component<'shared.logo-link', true>;
     textReserved: Schema.Attribute.Text;
   };
@@ -34,7 +33,6 @@ export interface LayoutHeader extends Struct.ComponentSchema {
   };
   attributes: {
     logo: Schema.Attribute.Component<'shared.logo-link', false>;
-    navItems: Schema.Attribute.Component<'shared.link', true>;
   };
 }
 

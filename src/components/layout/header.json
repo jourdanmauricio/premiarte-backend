@@ -9,11 +9,6 @@
       "type": "component",
       "component": "shared.logo-link",
       "repeatable": false
-    },
-    "navItems": {
-      "type": "component",
-      "component": "shared.link",
-      "repeatable": true
     }
   },
   "config": {}
