@@ -20,4 +20,9 @@ export default ({ env }) => ({
   telemetry: {
     enabled: false, // ← Desactiva completamente la telemetría
   },
+  settings: {
+    releases: {
+      enabled: false, // ← No verifica nuevas versiones
+    },
+  },
 });
