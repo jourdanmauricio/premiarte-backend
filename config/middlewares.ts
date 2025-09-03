@@ -15,10 +15,40 @@ export default [
       contentSecurityPolicy: {
         useDefaults: true,
         directives: {
-          'connect-src': ["'self'", "https"],
-          'img-src': ["'self'", "data:", "blob:", "https://res.cloudinary.com"],
+          'connect-src': [
+            "'self'", 
+            "https:",
+            // URLs específicas que están causando los errores CSP
+            "https://api.github.com",
+            "https://analytics.strapi.io",
+          ],
+          'img-src': [
+            "'self'", 
+            "data:", 
+            "blob:", 
+            "https://res.cloudinary.com",
+            // Agregar market-assets para Strapi v5
+            "market-assets.strapi.io",
+          ],
+          'media-src': [
+            "'self'", 
+            "data:", 
+            "blob:", 
+            "https://res.cloudinary.com"
+          ],
+          'script-src': [
+            "'self'", 
+            "'unsafe-inline'", 
+            "'unsafe-eval'"
+          ],
+          'style-src': [
+            "'self'", 
+            "'unsafe-inline'"
+          ],
+          upgradeInsecureRequests: null,
         },
       },
+      crossOriginEmbedderPolicy: false,
     },
   }
 ];

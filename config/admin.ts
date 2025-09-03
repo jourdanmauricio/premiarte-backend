@@ -16,13 +16,5 @@ export default ({ env }) => ({
   flags: {
     nps: env.bool('FLAG_NPS', true),
     promoteEE: env.bool('FLAG_PROMOTE_EE', true),
-  },
-  telemetry: {
-    enabled: false, // ← Desactiva completamente la telemetría
-  },
-  settings: {
-    releases: {
-      enabled: false, // ← No verifica nuevas versiones
-    },
-  },
+  }
 });
