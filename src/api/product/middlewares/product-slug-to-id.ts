@@ -8,14 +8,13 @@ export default (config, { strapi }: { strapi: Core.Strapi }) => {
     if (ctx.params.id && isNaN(Number(ctx.params.id))) {
       try {
         const slug = ctx.params.id;
-        console.log('Buscando producto con slug:', slug);
         
-        // Hacer la consulta completa directamente aquí
-        const product = await strapi.db.query('api::product.product').findOne({
-          where: { slug: slug },
+        // Usar Entity Service en lugar de DB query para que el populate funcione igual
+        const products = await strapi.entityService.findMany('api::product.product', {
+          filters: { slug: slug },
           populate: {
             images: {
-              fields: ['alternativeText', 'url'], 
+              fields: ['alternativeText', 'url']
             },
             categories: {
               fields: ['name', 'slug']
@@ -23,16 +22,18 @@ export default (config, { strapi }: { strapi: Core.Strapi }) => {
           }
         });
         
-        console.log('Producto encontrado:', product ? 'SÍ' : 'NO');
+        const product = products && products.length > 0 ? products[0] : null;
         
+       
         if (product) {
+          // Ya no necesitamos el map porque Entity Service respeta el populate con fields
+          
           // Devolver el resultado directamente sin continuar al siguiente middleware
           ctx.body = {
             data: product,
             meta: {}
           };
           ctx.status = 200;
-          console.log('Respuesta enviada directamente desde middleware');
           return; // No llamar a next()
         } else {
           console.log('Producto no encontrado con slug:', slug);
