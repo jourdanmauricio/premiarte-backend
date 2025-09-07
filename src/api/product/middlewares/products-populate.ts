@@ -24,8 +24,6 @@ export default (config, { strapi }: { strapi: Core.Strapi }) => {
       };
     }
 
-    console.log('ctx.query:', ctx.query);
-
     await next();
   };
 };
