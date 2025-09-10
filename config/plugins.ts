@@ -35,4 +35,8 @@ export default ({ env }) => ({
       },
     },
   },
+  'premiarte-manager': {
+    enabled: true,
+    resolve: './src/plugins/premiarte-manager'
+  },
 });

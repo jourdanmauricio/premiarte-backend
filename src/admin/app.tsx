@@ -3,35 +3,19 @@ import type { StrapiApp } from '@strapi/strapi/admin';
 export default {
   config: {
     locales: [
-      // 'ar',
-      // 'fr',
-      // 'cs',
-      // 'de',
-      // 'dk',
-      'es',
-      // 'he',
-      // 'id',
-      // 'it',
-      // 'ja',
-      // 'ko',
-      // 'ms',
-      // 'nl',
-      // 'no',
-      // 'pl',
-      // 'pt-BR',
-      // 'pt',
-      // 'ru',
-      // 'sk',
-      // 'sv',
-      // 'th',
-      // 'tr',
-      // 'uk',
-      // 'vi',
-      // 'zh-Hans',
-      // 'zh',
+      'es', 'en'
     ],
     tutorials: false,
     notifications: { releases: false },
+    translations: {
+      en: {
+        "premiarte-manager.plugin.name": "Gestión Premiarte"
+      },
+      es: {
+        "premiarte-manager.plugin.name": "Gestión Premiarte",
+        "content-manager.plugin.name": "Gestión Premiarte",
+      }
+    },
   },
   bootstrap(app: StrapiApp) {
     console.log(app);

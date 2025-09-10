@@ -89,3 +89,9 @@ docker-compose down
 
 # 6. Para eliminar todo incluyendo volúmenes (¡cuidado!):
 docker-compose down -v
+
+
+# Creación de plugin
+--------------------
+
+npx @strapi/sdk-plugin@latest init premiarte-manager
