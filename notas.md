@@ -95,3 +95,6 @@ docker-compose down -v
 --------------------
 
 npx @strapi/sdk-plugin@latest init premiarte-manager
+
+NODE_OPTIONS="--max-old-space-size=4096" npm run build
+

@@ -2,8 +2,6 @@
  * `global-populate` middleware
  */
 
-import type { Core } from '@strapi/strapi';
-
 const populate = {
     favicon: {
       fields: ["alternativeText", "url"]
@@ -52,7 +50,7 @@ const populate = {
     }
   };
 
-export default (config, { strapi }: { strapi: Core.Strapi }) => {
+export default (config, { strapi }) => {
   // Add your own logic here.
   return async (ctx, next) => {
     strapi.log.info('In global-populate middleware.');

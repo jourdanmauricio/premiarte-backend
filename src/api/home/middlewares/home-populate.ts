@@ -2,9 +2,7 @@
  * `home-populate` middleware
  */
 
-import type { Core } from '@strapi/strapi';
-
-export default (config, { strapi }: { strapi: Core.Strapi }) => {
+export default (config, { strapi }) => {
   // Add your own logic here.
   return async (ctx, next) => {
     strapi.log.info('In home-populate middleware.');
