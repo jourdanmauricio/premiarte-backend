@@ -5,30 +5,26 @@ FROM node:18-alpine AS builder
 # Establece el directorio de trabajo
 WORKDIR /app
 
-# Copia los archivos package.json y package-lock.json de la raíz y del plugin.
-# Esto asegura que todas las dependencias se instalen en un solo paso y que el caché de Docker se use de forma eficiente.
+# Copia los archivos package.json y package-lock.json.
+# Esto es crucial para la gestión de dependencias y el caching de Docker.
 COPY package*.json ./
-COPY src/plugins/premiarte-manager/package*.json ./src/plugins/premiarte-manager/
 
-# Instala TODAS las dependencias (producción y desarrollo) en un solo paso
-# Esto es más eficiente que tener dos comandos de instalación separados.
+# Copia la carpeta del plugin a la misma ubicación donde se encuentra el paquete en un entorno de NPM real.
+# Esto permite que la referencia "file:../premiarte-manager" funcione correctamente.
+COPY ../premiarte-manager/ ./premiarte-manager/
+
+# Instala TODAS las dependencias (producción y desarrollo) en un solo paso.
+# Esto ahora incluirá tu plugin "premiarte-manager" como una dependencia local.
 RUN npm install --ignore-scripts
 
-# Copia todo el código fuente de tu aplicación (incluyendo los plugins)
-COPY . .
-
-# Limpia los archivos de build antiguos para evitar errores de caché o artefactos anteriores
-RUN rm -rf .strapi build
-
 # Aumenta el límite de memoria del heap de JavaScript para el proceso de build.
-# Esto es crucial para evitar el error "JavaScript heap out of memory" en entornos con poca RAM.
+# Esto es crucial para evitar el error "JavaScript heap out of memory".
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Construye el plugin de forma explícita.
-# Se navega al directorio del plugin para ejecutar 'npm run build' en el contexto correcto.
-RUN cd ./src/plugins/premiarte-manager && npm run build
+# Copia el resto del código fuente de tu aplicación.
+COPY . .
 
-# Construye la aplicación principal. Ahora el panel de administración del plugin ya existe.
+# Construye la aplicación principal. La dependencia del plugin ya se instaló y está lista.
 RUN npm run build
 
 # Etapa 2: Final
