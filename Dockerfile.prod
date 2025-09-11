@@ -17,6 +17,10 @@ COPY . .
 # Limpia los archivos de build antiguos para evitar errores de caché o artefactos anteriores
 RUN rm -rf .strapi build
 
+# PASO AÑADIDO: Moverse al directorio del plugin e instalar sus dependencias de forma explícita
+# Esto asegura que el "strapi-plugin" esté disponible en el PATH del plugin.
+RUN cd ./src/plugins/premiarte-manager && npm install
+
 # PASO AÑADIDO: Construye el plugin de forma explícita.
 # Se navega al directorio del plugin para ejecutar 'npm run build' en el contexto correcto.
 RUN cd ./src/plugins/premiarte-manager && npm run build
