@@ -9,10 +9,6 @@ WORKDIR /app
 # Esto es crucial para la gestión de dependencias y el caching de Docker.
 COPY package*.json ./
 
-# Copia la carpeta del plugin a la misma ubicación donde se encuentra el paquete en un entorno de NPM real.
-# Esto permite que la referencia "file:../premiarte-manager" funcione correctamente.
-COPY ../premiarte-manager/ ./premiarte-manager/
-
 # Instala TODAS las dependencias (producción y desarrollo) en un solo paso.
 # Esto ahora incluirá tu plugin "premiarte-manager" como una dependencia local.
 RUN npm install --ignore-scripts
@@ -21,10 +17,10 @@ RUN npm install --ignore-scripts
 # Esto es crucial para evitar el error "JavaScript heap out of memory".
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Copia el resto del código fuente de tu aplicación.
+# Copia el resto del código fuente de tu aplicación, incluyendo el plugin.
 COPY . .
 
-# Construye la aplicación principal. La dependencia del plugin ya se instaló y está lista.
+# Construye la aplicación principal. Strapi se encargará de compilar los plugins automáticamente.
 RUN npm run build
 
 # Etapa 2: Final
