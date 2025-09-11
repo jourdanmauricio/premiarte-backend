@@ -1,53 +1,30 @@
-# Etapa 1: Builder
-# Esta etapa es para la construcción. Contendrá todas las dependencias.
-FROM node:18-alpine AS builder
-
-# Establece el directorio de trabajo
-WORKDIR /app
-
-# Copia los archivos package.json y package-lock.json.
-# Esto es crucial para la gestión de dependencias y el caching de Docker.
-COPY package*.json ./
-
-# Instala TODAS las dependencias (producción y desarrollo) en un solo paso.
-# Esto ahora incluirá tu plugin "premiarte-manager" como una dependencia local.
-RUN npm install --ignore-scripts
-
-# Aumenta el límite de memoria del heap de JavaScript para el proceso de build.
-# Esto es crucial para evitar el error "JavaScript heap out of memory".
-ENV NODE_OPTIONS="--max-old-space-size=4096"
-
-# Copia el resto del código fuente de tu aplicación, incluyendo el plugin.
-COPY . .
-
-# Construye la aplicación principal. Strapi se encargará de compilar los plugins automáticamente.
-RUN npm run build
-
-# Etapa 2: Final
-# Esta será la imagen de producción, más ligera y optimizada.
 FROM node:18-alpine
 
-# Instala curl para el health check
-RUN apk add --no-cache curl
+# Instalar dependencias del sistema
+RUN apk add --no-cache python3 make g++ curl
 
-# Establece el directorio de trabajo
 WORKDIR /app
 
-# Copia ÚNICAMENTE las dependencias de producción y los archivos de build
-# Esto mantiene la imagen final muy ligera.
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/build ./build
-COPY --from=builder /app/.strapi ./.strapi
+# Copia archivos de configuración
+COPY package*.json ./
 
-# Copia los archivos del código fuente necesarios para la producción
+# Instala dependencias
+RUN npm install
+
+# Copia todo el código
 COPY . .
 
-# Expone el puerto por defecto de Strapi
+# Configurar memoria y build
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
+# Build con más información de debug
+RUN npm run build -- --debug
+
+# Expone puerto
 EXPOSE 1337
 
-# Salud de la aplicación
+# Health check
 HEALTHCHECK --interval=30s --timeout=3s \
   CMD curl -f http://localhost:1337/_health || exit 1
 
-# Comando para iniciar la aplicación en producción
 CMD ["npm", "start"]
