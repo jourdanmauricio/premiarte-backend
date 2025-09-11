@@ -1,36 +1,36 @@
-FROM node:20-alpine
-
-# Instalar dependencias del sistema
-RUN apk add --no-cache python3 make g++ curl
+# Etapa 1: Builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copia archivos de configuración
-COPY package*.json ./
-
-# Instala dependencias
-RUN npm install
-
-# Copia todo el código (incluyendo dist si ya está compilado)
+# Copiar todo el código fuente del proyecto.
 COPY . .
 
-# Configurar memoria - CRÍTICO
-ENV NODE_OPTIONS="--max-old-space-size=4096"
+# Instalar dependencias del proyecto principal.
+RUN npm ci
 
-# Compilar el plugin solo si no está ya compilado
-RUN if [ ! -f "src/plugins/premiarte-manager/dist/admin/index.mjs" ]; then \
-        echo "Plugin not compiled, building..." && \
-        cd src/plugins/premiarte-manager && \
-        npx strapi-plugin build; \
-    else \
-        echo "Plugin already compiled, skipping build"; \
-    fi
+# Entrar a la carpeta del plugin e instalar sus dependencias.
+RUN cd src/plugins/premiarte-manager && npm ci
 
-# Verificar que los archivos existen
-RUN ls -la src/plugins/premiarte-manager/dist/admin/index.mjs
+# Compilar el plugin.
+RUN cd src/plugins/premiarte-manager && npm run build
 
-# Build de la aplicación principal
-RUN npm run build
+# Compilar la aplicación principal de Strapi.
+# Si este comando falla, el build de Docker también fallará,
+# lo cual es lo que queremos para poder ver el error real.
+RUN NODE_OPTIONS="--max-old-space-size=4096" npm run build
+
+# -----------------------------------------------------------
+# Etapa 2: Final
+FROM node:20-alpine
+
+RUN apk add --no-cache curl
+
+WORKDIR /app
+
+# Copiar todo el código fuente y las dependencias de la etapa 'builder'.
+# Esto es más seguro y evita errores de "not found" si algún archivo no se genera.
+COPY --from=builder /app .
 
 EXPOSE 1337
 
