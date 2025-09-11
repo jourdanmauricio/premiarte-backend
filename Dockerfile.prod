@@ -5,10 +5,13 @@ FROM node:18-alpine AS builder
 # Establece el directorio de trabajo
 WORKDIR /app
 
-# Copia los archivos package.json y package-lock.json primero para aprovechar el caché de Docker
+# Copia los archivos package.json y package-lock.json de la raíz y del plugin.
+# Esto asegura que todas las dependencias se instalen en un solo paso y que el caché de Docker se use de forma eficiente.
 COPY package*.json ./
+COPY src/plugins/premiarte-manager/package*.json ./src/plugins/premiarte-manager/
 
-# Instala TODAS las dependencias (producción y desarrollo), ya que el comando "build" las necesita.
+# Instala TODAS las dependencias (producción y desarrollo) en un solo paso
+# Esto es más eficiente que tener dos comandos de instalación separados.
 RUN npm install --ignore-scripts
 
 # Copia todo el código fuente de tu aplicación (incluyendo los plugins)
@@ -17,11 +20,11 @@ COPY . .
 # Limpia los archivos de build antiguos para evitar errores de caché o artefactos anteriores
 RUN rm -rf .strapi build
 
-# PASO AÑADIDO: Moverse al directorio del plugin e instalar sus dependencias de forma explícita
-# Esto asegura que el "strapi-plugin" esté disponible en el PATH del plugin.
-RUN cd ./src/plugins/premiarte-manager && npm install
+# Aumenta el límite de memoria del heap de JavaScript para el proceso de build.
+# Esto es crucial para evitar el error "JavaScript heap out of memory" en entornos con poca RAM.
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# PASO AÑADIDO: Construye el plugin de forma explícita.
+# Construye el plugin de forma explícita.
 # Se navega al directorio del plugin para ejecutar 'npm run build' en el contexto correcto.
 RUN cd ./src/plugins/premiarte-manager && npm run build
 
@@ -38,18 +41,14 @@ RUN apk add --no-cache curl
 # Establece el directorio de trabajo
 WORKDIR /app
 
-# Copia ÚNICAMENTE las dependencias de producción desde la etapa 'builder'
+# Copia ÚNICAMENTE las dependencias de producción y los archivos de build
 # Esto mantiene la imagen final muy ligera.
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/.strapi ./.strapi
 
-# Copia el código fuente de la aplicación y los artefactos de la construcción.
-# Esto incluye la carpeta "dist" dentro del plugin, que ahora debería estar compilada.
-COPY --from=builder /app ./
-
-# Copia los artefactos de la construcción (el panel de administración compilado)
-# Esta es la parte crucial que faltaba en tu Dockerfile.
-COPY --from=builder /app/.strapi /app/.strapi
-COPY --from=builder /app/build /app/build
+# Copia los archivos del código fuente necesarios para la producción
+COPY . .
 
 # Expone el puerto por defecto de Strapi
 EXPOSE 1337
