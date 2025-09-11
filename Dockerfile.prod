@@ -18,8 +18,8 @@ COPY . .
 RUN rm -rf .strapi build
 
 # PASO AÑADIDO: Construye el plugin de forma explícita.
-# El comando --prefix permite ejecutar el script de 'build' en la carpeta del plugin.
-RUN npm run build --prefix ./src/plugins/premiarte-manager
+# Se usa 'npx' para que el comando 'strapi-plugin' sea encontrado.
+RUN npx --prefix ./src/plugins/premiarte-manager strapi-plugin build
 
 # Construye la aplicación principal. Ahora el panel de administración del plugin ya existe.
 RUN npm run build
