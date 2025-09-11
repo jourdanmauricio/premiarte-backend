@@ -1,0 +1,51 @@
+# Etapa 1: Builder
+# Esta etapa es para la construcción. Contendrá todas las dependencias.
+FROM node:18-alpine AS builder
+
+# Establece el directorio de trabajo
+WORKDIR /app
+
+# Copia los archivos package.json y package-lock.json primero para aprovechar el caché de Docker
+COPY package*.json ./
+
+# Instala TODAS las dependencias (producción y desarrollo), ya que el comando "build" las necesita.
+RUN npm install --ignore-scripts
+
+# Copia todo el código fuente de tu aplicación (incluyendo los plugins)
+COPY . .
+
+# Construye la aplicación. Esto creará el panel de administración y los archivos estáticos.
+# El comando "build" de Strapi es el que requiere las dependencias de desarrollo.
+RUN npm run build
+
+# Etapa 2: Final
+# Esta será la imagen de producción, más ligera y optimizada.
+FROM node:18-alpine
+
+# Instala curl para el health check
+RUN apk add --no-cache curl
+
+# Establece el directorio de trabajo
+WORKDIR /app
+
+# Copia ÚNICAMENTE las dependencias de producción desde la etapa 'builder'
+# Esto mantiene la imagen final muy ligera.
+COPY --from=builder /app/node_modules ./node_modules
+
+# Copia el código fuente de la aplicación desde la etapa 'builder'
+COPY --from=builder /app ./
+
+# Copia los artefactos de la construcción (el panel de administración compilado)
+# Esta es la parte crucial que faltaba en tu Dockerfile.
+COPY --from=builder /app/.strapi /app/.strapi
+COPY --from=builder /app/build /app/build
+
+# Expone el puerto por defecto de Strapi
+EXPOSE 1337
+
+# Salud de la aplicación
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD curl -f http://localhost:1337/_health || exit 1
+
+# Comando para iniciar la aplicación en producción
+CMD ["npm", "start"]
