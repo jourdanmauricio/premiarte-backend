@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Instalar dependencias del sistema
 RUN apk add --no-cache python3 make g++ curl
@@ -11,19 +11,29 @@ COPY package*.json ./
 # Instala dependencias
 RUN npm install
 
-# Copia todo el código
+# Copia todo el código (incluyendo dist si ya está compilado)
 COPY . .
 
-# Configurar memoria y build
+# Configurar memoria - CRÍTICO
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Build con más información de debug
-RUN npm run build -- --debug
+# Compilar el plugin solo si no está ya compilado
+RUN if [ ! -f "src/plugins/premiarte-manager/dist/admin/index.mjs" ]; then \
+        echo "Plugin not compiled, building..." && \
+        cd src/plugins/premiarte-manager && \
+        npx strapi-plugin build; \
+    else \
+        echo "Plugin already compiled, skipping build"; \
+    fi
 
-# Expone puerto
+# Verificar que los archivos existen
+RUN ls -la src/plugins/premiarte-manager/dist/admin/index.mjs
+
+# Build de la aplicación principal
+RUN npm run build
+
 EXPOSE 1337
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s \
   CMD curl -f http://localhost:1337/_health || exit 1
 
