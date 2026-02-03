@@ -1,0 +1,241 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Budget {
+  id            Int          @id @default(autoincrement())
+  customerId    Int
+  observation   String?
+  totalAmount   Int          @default(0)
+  status        String       @default("pending")
+  userId        String?
+  isRead        Boolean      @default(false)
+  expiresAt     DateTime?
+  approvedAt    DateTime?
+  rejectedAt    DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @default(now()) @updatedAt
+  type          String?
+  responsibleId Int?
+  customer      Customer     @relation(fields: [customerId], references: [id])
+  items         BudgetItem[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([userId])
+  @@index([responsibleId])
+}
+
+model BudgetItem {
+  id             Int      @id @default(autoincrement())
+  budgetId       Int
+  productId      Int
+  price          Int
+  quantity       Int
+  amount         Int
+  observation    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+  retailPrice    Int      @default(0)
+  wholesalePrice Int      @default(0)
+  budget         Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  product        Product  @relation(fields: [productId], references: [id])
+
+  @@index([budgetId])
+}
+
+model Category {
+  id          Int               @id @default(autoincrement())
+  name        String
+  slug        String            @unique
+  description String
+  imageId     Int
+  featured    Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @default(now()) @updatedAt
+  image       Image             @relation(fields: [imageId], references: [id])
+  products    ProductCategory[]
+}
+
+model Contact {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  phone     String?
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Customer {
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String   @unique
+  phone       String
+  type        String   @default("retail")
+  document    String?
+  address     String?
+  observation String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+  budgets     Budget[]
+  orders      Order[]
+
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Image {
+  id            Int            @id @default(autoincrement())
+  url           String
+  alt           String
+  tag           String?
+  observation   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @default(now()) @updatedAt
+  publicId      String?
+  categories    Category[]
+  productImages ProductImage[]
+}
+
+model NewsletterSubscriber {
+  id             Int       @id @default(autoincrement())
+  name           String
+  email          String    @unique
+  isActive       Boolean   @default(true)
+  subscribedAt   DateTime  @default(now())
+  unsubscribedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  customerId  Int
+  type        String
+  status      String
+  totalAmount Int
+  observation String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @default(now()) @updatedAt
+  customer    Customer    @relation(fields: [customerId], references: [id])
+  items       OrderItem[]
+}
+
+model OrderItem {
+  id             Int      @id @default(autoincrement())
+  orderId        Int
+  productId      Int
+  price          Int
+  retailPrice    Int
+  wholesalePrice Int
+  quantity       Int
+  amount         Int
+  observation    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product        Product  @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+}
+
+model Product {
+  id             Int               @id @default(autoincrement())
+  name           String
+  description    String
+  stock          Int
+  isActive       Boolean           @default(true)
+  isFeatured     Boolean           @default(false)
+  retailPrice    Int
+  wholesalePrice Int
+  slug           String            @unique
+  categoryId     Int?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @default(now()) @updatedAt
+  sku            String?           @unique
+  priceUpdatedAt DateTime?
+  priceUpdated   String?
+  budgetItems    BudgetItem[]
+  orderItems     OrderItem[]
+  categories     ProductCategory[]
+  images         ProductImage[]
+  relatedFrom    ProductRelated[]  @relation("ProductRelatedFrom")
+  relatedTo      ProductRelated[]  @relation("ProductRelatedTo")
+}
+
+model ProductCategory {
+  id         Int      @id @default(autoincrement())
+  productId  Int
+  categoryId Int
+  createdAt  DateTime @default(now())
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, categoryId])
+  @@index([productId])
+  @@index([categoryId])
+}
+
+model ProductImage {
+  id         Int      @id @default(autoincrement())
+  productId  Int
+  imageId    Int
+  orderIndex Int      @default(0) @map("order_index")
+  isPrimary  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  image      Image    @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, imageId])
+  @@index([productId])
+  @@index([imageId])
+  @@index([productId, isPrimary])
+}
+
+model ProductRelated {
+  id               Int      @id @default(autoincrement())
+  productId        Int
+  relatedProductId Int
+  createdAt        DateTime @default(now())
+  product          Product  @relation("ProductRelatedFrom", fields: [productId], references: [id], onDelete: Cascade)
+  relatedProduct   Product  @relation("ProductRelatedTo", fields: [relatedProductId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, relatedProductId])
+}
+
+model Responsible {
+  id          Int      @id @default(autoincrement())
+  name        String
+  cuit        String   @unique
+  condition   String
+  observation String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@index([createdAt])
+}
+
+model Setting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}

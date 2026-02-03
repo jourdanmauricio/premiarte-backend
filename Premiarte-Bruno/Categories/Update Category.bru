@@ -1,0 +1,22 @@
+meta {
+  name: Update Category
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{url}}/categories/27
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "slug": "trofeos"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

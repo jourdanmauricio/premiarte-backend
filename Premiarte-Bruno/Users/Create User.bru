@@ -1,0 +1,32 @@
+meta {
+  name: Create User
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{url}}/users
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzNjQwZmUyMi02MmU0LTQ1YTctYjBlYy05ZmEyNzM0ZWY0MzMiLCJpYXQiOjE3NzAwMjUwNzcsImV4cCI6MTc3MDYyOTg3N30.R5Uj07HE8dZMPqdx1H6Tb_Te6FOM1pyJsOTA1AoVyTM
+}
+
+body:json {
+  {
+    "name": "Mauricio Jourdan",
+    "email": "jourdanmauricio@gmail.com",
+    "password": "Mau10ti0"
+  }
+}
+
+script:pre-request {
+  req.setHeader("Authorization", "Bearer {{access_token}}");
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
