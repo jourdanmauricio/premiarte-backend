@@ -1,0 +1,31 @@
+meta {
+  name: Add Image to Product
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/products/:id/images
+  body: json
+  auth: none
+}
+
+params:path {
+  id: 1
+}
+
+body:json {
+  {
+    "imageId": 2,
+    "orderIndex": 1,
+    "isPrimary": false
+  }
+}
+
+docs {
+  Agrega una imagen a un producto existente.
+  
+  - imageId: ID de la imagen a agregar (requerido)
+  - orderIndex: orden de la imagen (opcional, default: 0)
+  - isPrimary: si es la imagen principal (opcional, default: false)
+}

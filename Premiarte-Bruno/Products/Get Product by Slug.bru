@@ -1,0 +1,19 @@
+meta {
+  name: Get Product by Slug
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/products/slug/:slug
+  body: none
+  auth: none
+}
+
+params:path {
+  slug: mi-producto
+}
+
+docs {
+  Obtiene un producto por su slug incluyendo categorías, imágenes y productos relacionados.
+}

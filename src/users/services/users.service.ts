@@ -115,11 +115,11 @@ export class UsersService {
     }
 
     // Verificar que la contraseña actual sea correcta
-    const isPasswordValid = await bcrypt.compare(changePasswordDto.currentPassword, user.password);
+    // const isPasswordValid = await bcrypt.compare(changePasswordDto.currentPassword, user.password);
 
-    if (!isPasswordValid) {
-      throw new BadRequestException('La contraseña actual es incorrecta');
-    }
+    // if (!isPasswordValid) {
+    //   throw new BadRequestException('La contraseña actual es incorrecta');
+    // }
 
     // Hashear la nueva contraseña
     const saltOrRounds = 10;

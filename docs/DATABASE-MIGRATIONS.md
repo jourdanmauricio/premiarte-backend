@@ -29,6 +29,7 @@ npx prisma migrate dev --name nombre_descriptivo
 ```
 
 Esto:
+
 - Genera el archivo SQL en `prisma/migrations/[timestamp]_nombre_descriptivo/migration.sql`
 - Aplica la migración a `dev.db` (local)
 - Regenera el cliente de Prisma
@@ -57,14 +58,14 @@ turso db shell premiarte-db ".schema nombre_tabla"
 
 ## Comandos útiles
 
-| Comando | Descripción |
-|---------|-------------|
-| `npx prisma migrate dev --name xxx` | Crear y aplicar migración local |
-| `npx prisma migrate dev --create-only` | Solo crear archivo, no aplicar |
-| `npx prisma generate` | Regenerar cliente Prisma |
-| `npx prisma studio` | Abrir GUI para ver datos (usa dev.db) |
-| `turso db shell premiarte-db` | Shell interactivo de Turso |
-| `turso db shell premiarte-db ".schema"` | Ver schema completo en Turso |
+| Comando                                 | Descripción                           |
+| --------------------------------------- | ------------------------------------- |
+| `npx prisma migrate dev --name xxx`     | Crear y aplicar migración local       |
+| `npx prisma migrate dev --create-only`  | Solo crear archivo, no aplicar        |
+| `npx prisma generate`                   | Regenerar cliente Prisma              |
+| `npx prisma studio`                     | Abrir GUI para ver datos (usa dev.db) |
+| `turso db shell premiarte-db`           | Shell interactivo de Turso            |
+| `turso db shell premiarte-db ".schema"` | Ver schema completo en Turso          |
 
 ---
 
@@ -86,6 +87,50 @@ turso db shell premiarte-db < prisma/migrations/*_add_product_discount/migration
 
 # 5. Verificar
 turso db shell premiarte-db "PRAGMA table_info(Product);"
+```
+
+---
+
+## Migración Budget.id a UUID (20260214000000_budget_id_uuid)
+
+Esta migración cambia `Budget.id` de `INTEGER` a `TEXT` (UUID). Es una migración manual porque SQLite no permite cambiar el tipo de una columna con `ALTER COLUMN`.
+
+**Aplicar en Turso (producción):**
+
+```bash
+turso db shell premiarte-db < prisma/migrations/20260214000000_budget_id_uuid/migration.sql
+```
+
+**Si tienes `dev.db` local con datos:** aplica el mismo SQL y marca la migración como aplicada:
+
+```bash
+sqlite3 prisma/dev.db < prisma/migrations/20260214000000_budget_id_uuid/migration.sql
+npx prisma migrate resolve --applied 20260214000000_budget_id_uuid
+npx prisma generate
+```
+
+**Si `dev.db` está vacío o puedes recrearlo:** elimínalo y aplica todas las migraciones desde cero, o aplica esta migración y `migrate resolve` como arriba.
+
+---
+
+## Migración Customer.id y Order.id a UUID (20260214100000_customer_order_id_uuid)
+
+Esta migración cambia `Customer.id` y `Order.id` de `INTEGER` a `TEXT` (UUID), y las FKs asociadas: `Budget.customerId`, `Order.customerId`, `OrderItem.orderId`.
+
+**Requisito:** Debe estar aplicada antes la migración `20260214000000_budget_id_uuid` (Budget.id UUID).
+
+**Aplicar en Turso (producción):**
+
+```bash
+turso db shell premiarte-db < prisma/migrations/20260215143704_customer_email_optional/migration.sql
+```
+
+**Si tienes `dev.db` local con datos:**
+
+```bash
+sqlite3 prisma/dev.db < prisma/migrations/20260214100000_customer_order_id_uuid/migration.sql
+npx prisma migrate resolve --applied 20260214100000_customer_order_id_uuid
+npx prisma generate
 ```
 
 ---

@@ -1,0 +1,45 @@
+meta {
+  name: Update Product
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/products/:id
+  body: json
+  auth: none
+}
+
+params:path {
+  id: 1
+}
+
+body:json {
+  {
+    "name": "Producto actualizado",
+    "description": "Descripción actualizada",
+    "stock": 150,
+    "retailPrice": 18000,
+    "wholesalePrice": 14000,
+    "categoryIds": [1, 2],
+    "images": [
+      {
+        "imageId": 1,
+        "orderIndex": 0,
+        "isPrimary": true
+      },
+      {
+        "imageId": 2,
+        "orderIndex": 1,
+        "isPrimary": false
+      }
+    ]
+  }
+}
+
+docs {
+  Actualiza un producto existente.
+  
+  Todos los campos son opcionales. Si se proporcionan categoryIds, images o relatedProductIds,
+  se reemplazarán completamente las relaciones existentes.
+}

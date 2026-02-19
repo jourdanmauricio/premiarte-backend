@@ -1,0 +1,21 @@
+meta {
+  name: Add Related Product
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/products/:id/related/:relatedId
+  body: none
+  auth: none
+}
+
+params:path {
+  id: 1
+  relatedId: 2
+}
+
+docs {
+  Agrega un producto relacionado.
+  Un producto no puede estar relacionado consigo mismo.
+}

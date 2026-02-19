@@ -6,4 +6,8 @@ export interface EnvModels {
   ADMIN_USER_NAME: string;
   ADMIN_USER_EMAIL: string;
   ADMIN_USER_PASSWORD: string;
+  CLOUDINARY_CLOUD_NAME: string;
+  CLOUDINARY_API_KEY: string;
+  CLOUDINARY_API_SECRET: string;
+  CLOUDINARY_FOLDER: string;
 }

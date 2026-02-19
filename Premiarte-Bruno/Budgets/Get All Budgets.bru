@@ -1,0 +1,15 @@
+meta {
+  name: Get All Budgets
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{url}}/budgets
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

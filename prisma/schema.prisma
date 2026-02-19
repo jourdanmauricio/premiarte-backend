@@ -8,8 +8,8 @@ datasource db {
 }
 
 model Budget {
-  id            Int          @id @default(autoincrement())
-  customerId    Int
+  id            String       @id @default(uuid())
+  customerId    String
   observation   String?
   totalAmount   Int          @default(0)
   status        String       @default("pending")
@@ -34,7 +34,7 @@ model Budget {
 
 model BudgetItem {
   id             Int      @id @default(autoincrement())
-  budgetId       Int
+  budgetId       String
   productId      Int
   price          Int
   quantity       Int
@@ -75,10 +75,10 @@ model Contact {
 }
 
 model Customer {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid())
   name        String
-  email       String   @unique
-  phone       String
+  email       String?  @unique
+  phone       String?  @unique
   type        String   @default("retail")
   document    String?
   address     String?
@@ -117,8 +117,8 @@ model NewsletterSubscriber {
 }
 
 model Order {
-  id          Int         @id @default(autoincrement())
-  customerId  Int
+  id          String      @id @default(uuid())
+  customerId  String
   type        String
   status      String
   totalAmount Int
@@ -131,7 +131,7 @@ model Order {
 
 model OrderItem {
   id             Int      @id @default(autoincrement())
-  orderId        Int
+  orderId        String
   productId      Int
   price          Int
   retailPrice    Int

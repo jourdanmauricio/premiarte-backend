@@ -1,0 +1,24 @@
+meta {
+  name: Import xlsx customers
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{url}}/customers/import
+  body: multipartForm
+  auth: inherit
+}
+
+body:multipart-form {
+  file: @file(/home/mauricio/Descargas/Premiarte/customers.xlsx)
+}
+
+body:file {
+  file: @file(/home/mauricio/Descargas/Premiarte/customers.xlsx) @contentType(application/vnd.openxmlformats-officedocument.spreadsheetml.sheet)
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

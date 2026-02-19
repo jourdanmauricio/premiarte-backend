@@ -1,0 +1,20 @@
+meta {
+  name: Add Category to Product
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/products/:id/categories/:categoryId
+  body: none
+  auth: none
+}
+
+params:path {
+  id: 1
+  categoryId: 2
+}
+
+docs {
+  Agrega una categoría a un producto existente.
+}

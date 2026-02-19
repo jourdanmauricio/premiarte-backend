@@ -1,0 +1,55 @@
+meta {
+  name: Create Product
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/products
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Producto de ejemplo",
+    "description": "Descripción del producto de ejemplo",
+    "stock": 100,
+    "isActive": true,
+    "isFeatured": false,
+    "retailPrice": 15000,
+    "wholesalePrice": 12000,
+    "slug": "producto-de-ejemplo",
+    "sku": "PROD-001",
+    "categoryIds": [1],
+    "images": [
+      {
+        "imageId": 1,
+        "orderIndex": 0,
+        "isPrimary": true
+      }
+    ],
+    "relatedProductIds": []
+  }
+}
+
+docs {
+  Crea un nuevo producto con sus relaciones.
+  
+  Campos requeridos:
+  - name: nombre del producto
+  - description: descripción
+  - stock: cantidad en stock
+  - retailPrice: precio minorista en centavos
+  - wholesalePrice: precio mayorista en centavos
+  - slug: URL amigable (debe ser único)
+  
+  Campos opcionales:
+  - isActive: estado activo (default: true)
+  - isFeatured: destacado (default: false)
+  - sku: código único del producto
+  - categoryId: ID de categoría principal (legacy)
+  - categoryIds: array de IDs de categorías
+  - images: array de imágenes con imageId, orderIndex, isPrimary
+  - relatedProductIds: array de IDs de productos relacionados
+}

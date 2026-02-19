@@ -1,0 +1,20 @@
+meta {
+  name: Remove Image from Product
+  type: http
+  seq: 10
+}
+
+delete {
+  url: {{baseUrl}}/products/:id/images/:imageId
+  body: none
+  auth: none
+}
+
+params:path {
+  id: 1
+  imageId: 2
+}
+
+docs {
+  Elimina una imagen de un producto.
+}

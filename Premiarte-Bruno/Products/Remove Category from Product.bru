@@ -1,0 +1,20 @@
+meta {
+  name: Remove Category from Product
+  type: http
+  seq: 8
+}
+
+delete {
+  url: {{baseUrl}}/products/:id/categories/:categoryId
+  body: none
+  auth: none
+}
+
+params:path {
+  id: 1
+  categoryId: 2
+}
+
+docs {
+  Elimina una categoría de un producto.
+}

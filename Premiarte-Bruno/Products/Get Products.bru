@@ -1,0 +1,26 @@
+meta {
+  name: Get Products
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{url}}/products
+  body: none
+  auth: none
+}
+
+params:query {
+  ~isActive: true
+  ~isFeatured: true
+  ~categoryId: 1
+}
+
+docs {
+  Obtiene todos los productos con filtros opcionales.
+  
+  Query params opcionales:
+  - isActive: filtrar por estado activo (true/false)
+  - isFeatured: filtrar por productos destacados (true/false)
+  - categoryId: filtrar por ID de categoría
+}

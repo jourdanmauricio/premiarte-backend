@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { ImageEntity } from 'src/images/entities/image.entity';
 
 export type { Category } from '@prisma/client';
 
@@ -18,8 +19,11 @@ export class CategoryEntity {
   @ApiProperty({ description: 'ID de la imagen asociada' })
   imageId: number;
 
-  @ApiProperty({ description: 'Indica si la categoría es destacada', required: false })
-  featured?: boolean;
+  @ApiProperty({ description: 'Imagen asociada', type: ImageEntity })
+  image: ImageEntity;
+
+  @ApiProperty({ description: 'Indica si la categoría es destacada' })
+  featured: boolean;
 
   @ApiProperty({ description: 'Fecha de creación' })
   createdAt: Date;

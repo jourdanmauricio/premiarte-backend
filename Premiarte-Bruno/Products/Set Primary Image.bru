@@ -1,0 +1,21 @@
+meta {
+  name: Set Primary Image
+  type: http
+  seq: 11
+}
+
+put {
+  url: {{baseUrl}}/products/:id/images/:imageId/primary
+  body: none
+  auth: none
+}
+
+params:path {
+  id: 1
+  imageId: 1
+}
+
+docs {
+  Establece una imagen como la imagen principal del producto.
+  Automáticamente quita el flag isPrimary de las demás imágenes.
+}

@@ -1,0 +1,15 @@
+meta {
+  name: Get All Images
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{url}}/images
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

@@ -6,6 +6,14 @@ import { UsersModule } from './users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { CategoriesModule } from './categories/categories.module';
 import { AuthModule } from './auth/auth.module';
+import { ImagesModule } from './images/images.module';
+import { ProductsModule } from './products/products.module';
+import { SettingsModule } from './settings/settings.module';
+import { SubscribeModule } from './subscribe/subscribe.module';
+import { BudgetsModule } from './budgets/budgets.module';
+import { ResponsiblesModule } from './responsibles/responsibles.module';
+import { CustomersModule } from './customers/customers.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -16,6 +24,14 @@ import { AuthModule } from './auth/auth.module';
     UsersModule,
     CategoriesModule,
     AuthModule,
+    ImagesModule,
+    ProductsModule,
+    SettingsModule,
+    SubscribeModule,
+    BudgetsModule,
+    ResponsiblesModule,
+    CustomersModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

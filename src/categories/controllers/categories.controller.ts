@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, Delete, Put, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { CategoriesService } from '../services/categories.service';
 import { CreateCategoryDto } from '../dto/create-category.dto';
 import { UpdateCategoryDto } from '../dto/update-category.dto';
@@ -21,9 +20,12 @@ export class CategoriesController {
 
   @Get()
   @ApiOperation({ summary: 'Obtener todas las categorías' })
+  @ApiQuery({ name: 'isFeatured', required: false, type: Boolean, description: 'Filtrar por categorías destacadas' })
   @ApiResponse({ status: 200, description: 'Lista de categorías', type: [CategoryEntity] })
-  findAll() {
-    return this.categoriesService.findAll();
+  findAll(@Query('isFeatured') isFeatured?: string) {
+    return this.categoriesService.findAll({
+      isFeatured: isFeatured !== undefined ? isFeatured === 'true' : undefined,
+    });
   }
 
   @Get(':id')
