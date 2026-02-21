@@ -9,8 +9,6 @@ import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Budget')
 @Controller('budgets')
-@ApiBearerAuth('access-token')
-@UseGuards(AuthGuard('jwt'))
 export class BudgetsController {
   constructor(private readonly budgetsService: BudgetsService) {}
 
@@ -23,6 +21,8 @@ export class BudgetsController {
   }
 
   @Get()
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Listar todos los presupuestos' })
   @ApiResponse({ status: 200, description: 'Lista de presupuestos', type: [BudgetEntity] })
   findAll() {
@@ -30,6 +30,8 @@ export class BudgetsController {
   }
 
   @Get(':id')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Obtener un presupuesto por ID' })
   @ApiParam({ name: 'id', description: 'ID del presupuesto (UUID)', type: String })
   @ApiResponse({ status: 200, description: 'Presupuesto encontrado', type: BudgetEntity })
@@ -39,6 +41,8 @@ export class BudgetsController {
   }
 
   @Put(':id')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Actualizar un presupuesto' })
   @ApiParam({ name: 'id', description: 'ID del presupuesto (UUID)', type: String })
   @ApiResponse({ status: 200, description: 'Presupuesto actualizado', type: BudgetEntity })
@@ -48,6 +52,8 @@ export class BudgetsController {
   }
 
   @Put(':id/status')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Modificar solo el estado del presupuesto' })
   @ApiParam({ name: 'id', description: 'ID del presupuesto (UUID)', type: String })
   @ApiResponse({ status: 200, description: 'Estado actualizado', type: BudgetEntity })
@@ -57,6 +63,8 @@ export class BudgetsController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Eliminar un presupuesto' })
   @ApiParam({ name: 'id', description: 'ID del presupuesto (UUID)', type: String })
   @ApiResponse({ status: 200, description: 'Presupuesto eliminado' })
