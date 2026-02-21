@@ -4,6 +4,13 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
 
+/** Normaliza teléfono para búsqueda/guardado: trim y solo dígitos (evita duplicados por "11 5804-6525" vs "1158046525"). */
+function normalizePhone(phone: string | null | undefined): string | null {
+  if (phone == null || phone === '') return null;
+  const digits = phone.trim().replace(/\D/g, '');
+  return digits === '' ? null : digits;
+}
+
 @Injectable()
 export class BudgetsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -33,23 +40,49 @@ export class BudgetsService {
 
     const productMap = new Map(dbProducts.map((p) => [p.id, p]));
 
-    // Buscar cliente por email o por teléfono para reutilizarlo y evitar duplicados (UNIQUE en phone/email)
-    const orConditions = [...(email ? [{ email }] : []), ...(phone ? [{ phone }] : [])] as { email?: string; phone?: string }[];
+    const phoneNorm = normalizePhone(phone);
+    const emailNorm = email?.trim() || null;
+
+    // Buscar cliente por email o por teléfono (normalizado) para reutilizarlo
+    const orConditions = [...(emailNorm ? [{ email: emailNorm }] : []), ...(phoneNorm ? [{ phone: phoneNorm }] : [])] as { email?: string; phone?: string }[];
     let customer = orConditions.length ? await this.prisma.client.customer.findFirst({ where: { OR: orConditions } }) : null;
 
     if (!customer) {
-      customer = await this.prisma.client.customer.create({
-        data: {
-          name,
-          email,
-          phone,
-          type: 'retail',
-        },
-      });
+      try {
+        customer = await this.prisma.client.customer.create({
+          data: {
+            name,
+            email: emailNorm ?? undefined,
+            phone: phoneNorm ?? phone?.trim() ?? undefined,
+            type: 'retail',
+          },
+        });
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        const causeMsg = err instanceof Error && err.cause && typeof (err.cause as Error).message === 'string' ? (err.cause as Error).message : '';
+        const isUniquePhone = /UNIQUE constraint failed: Customer\.phone/i.test(msg) || /UNIQUE constraint failed: Customer\.phone/i.test(causeMsg);
+        const isUniqueEmail = /UNIQUE constraint failed: Customer\.email/i.test(msg) || /UNIQUE constraint failed: Customer\.email/i.test(causeMsg);
+        if (isUniquePhone || isUniqueEmail) {
+          customer = orConditions.length ? await this.prisma.client.customer.findFirst({ where: { OR: orConditions } }) : null;
+          if (phoneNorm && !customer) customer = await this.prisma.client.customer.findFirst({ where: { phone: phoneNorm } });
+          if (phoneNorm && !customer) {
+            const withPhone = await this.prisma.client.customer.findMany({ where: { phone: { not: null } } });
+            customer = withPhone.find((c) => normalizePhone(c.phone) === phoneNorm) ?? null;
+          }
+          if (emailNorm && !customer) customer = await this.prisma.client.customer.findFirst({ where: { email: emailNorm } });
+          if (!customer) throw err;
+          await this.prisma.client.customer.update({
+            where: { id: customer.id },
+            data: { name, phone: phoneNorm ?? phone?.trim(), ...(emailNorm != null && { email: emailNorm }) },
+          });
+        } else {
+          throw err;
+        }
+      }
     } else {
       await this.prisma.client.customer.update({
         where: { id: customer.id },
-        data: { name, phone, ...(email != null && { email }) },
+        data: { name, phone: phoneNorm ?? phone?.trim(), ...(emailNorm != null && { email: emailNorm }) },
       });
     }
 
