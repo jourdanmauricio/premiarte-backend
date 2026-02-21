@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Put, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, UseGuards } from '@nestjs/common';
 import { SettingsService } from './settings.service';
 import { CreateSettingDto } from './dto/create-setting.dto';
 import { UpdateSettingDto } from './dto/update-setting.dto';
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Settings')
 @Controller('settings')
@@ -43,6 +44,8 @@ export class SettingsController {
   }
 
   @Put(':id')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   update(@Param('id') id: string, @Body() updateSettingDto: UpdateSettingDto) {
     return this.settingsService.update(+id, updateSettingDto);
   }

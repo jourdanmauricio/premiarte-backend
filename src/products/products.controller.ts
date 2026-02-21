@@ -1,15 +1,18 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Query, ParseIntPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Put, Param, Delete, Query, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
 import { CreateProductDto, ProductImageDto } from './dto/create-product.dto';
 import { UpdateProductDto, UpdateProductPricesDto } from './dto/update-product.dto';
 import { ProductEntity } from './entities/product.entity';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Products')
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @Post()
   @ApiOperation({ summary: 'Crear un nuevo producto' })
   @ApiResponse({ status: 201, description: 'Producto creado exitosamente', type: ProductEntity })
@@ -52,6 +55,8 @@ export class ProductsController {
     return this.productsService.findBySlug(slug);
   }
 
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @Put('update-prices')
   @ApiOperation({ summary: 'Actualizar los precios de un producto' })
   @ApiBody({ type: UpdateProductPricesDto })
@@ -62,6 +67,8 @@ export class ProductsController {
     return this.productsService.updateProductPrices(updateProductPricesDto);
   }
 
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @Put(':id')
   @ApiOperation({ summary: 'Actualizar un producto por ID' })
   @ApiParam({ name: 'id', description: 'ID del producto', type: Number })
@@ -84,6 +91,8 @@ export class ProductsController {
   // Endpoints para gestión de categorías del producto
 
   @Post(':id/categories/:categoryId')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Agregar una categoría a un producto' })
   @ApiParam({ name: 'id', description: 'ID del producto', type: Number })
   @ApiParam({ name: 'categoryId', description: 'ID de la categoría', type: Number })
@@ -95,6 +104,8 @@ export class ProductsController {
   }
 
   @Delete(':id/categories/:categoryId')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Eliminar una categoría de un producto' })
   @ApiParam({ name: 'id', description: 'ID del producto', type: Number })
   @ApiParam({ name: 'categoryId', description: 'ID de la categoría', type: Number })
@@ -107,6 +118,8 @@ export class ProductsController {
   // Endpoints para gestión de imágenes del producto
 
   @Post(':id/images')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Agregar una imagen a un producto' })
   @ApiParam({ name: 'id', description: 'ID del producto', type: Number })
   @ApiBody({ type: ProductImageDto })
@@ -118,6 +131,8 @@ export class ProductsController {
   }
 
   @Delete(':id/images/:imageId')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Eliminar una imagen de un producto' })
   @ApiParam({ name: 'id', description: 'ID del producto', type: Number })
   @ApiParam({ name: 'imageId', description: 'ID de la imagen', type: Number })
@@ -128,6 +143,8 @@ export class ProductsController {
   }
 
   @Put(':id/images/:imageId/primary')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Establecer una imagen como principal' })
   @ApiParam({ name: 'id', description: 'ID del producto', type: Number })
   @ApiParam({ name: 'imageId', description: 'ID de la imagen', type: Number })
@@ -140,6 +157,8 @@ export class ProductsController {
   // Endpoints para gestión de productos relacionados
 
   @Post(':id/related/:relatedId')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Agregar un producto relacionado' })
   @ApiParam({ name: 'id', description: 'ID del producto', type: Number })
   @ApiParam({ name: 'relatedId', description: 'ID del producto relacionado', type: Number })
@@ -151,6 +170,8 @@ export class ProductsController {
   }
 
   @Delete(':id/related/:relatedId')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Eliminar un producto relacionado' })
   @ApiParam({ name: 'id', description: 'ID del producto', type: Number })
   @ApiParam({ name: 'relatedId', description: 'ID del producto relacionado', type: Number })

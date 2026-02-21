@@ -1,13 +1,16 @@
-import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { BudgetsService } from './budgets.service';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
 import { UpdateBudgetStatusDto } from './dto/update-budget-status.dto';
 import { BudgetEntity } from './entities/budget.entity';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Budget')
 @Controller('budgets')
+@ApiBearerAuth('access-token')
+@UseGuards(AuthGuard('jwt'))
 export class BudgetsController {
   constructor(private readonly budgetsService: BudgetsService) {}
 

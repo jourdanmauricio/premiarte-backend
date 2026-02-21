@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, Delete, Put, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { CategoriesService } from '../services/categories.service';
 import { CreateCategoryDto } from '../dto/create-category.dto';
 import { UpdateCategoryDto } from '../dto/update-category.dto';
 import { CategoryEntity } from '../entities/category.entity';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -11,6 +12,8 @@ export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Post()
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Crear una nueva categoría' })
   @ApiResponse({ status: 201, description: 'Categoría creada exitosamente', type: CategoryEntity })
   @ApiResponse({ status: 400, description: 'Datos de entrada inválidos' })
@@ -38,6 +41,8 @@ export class CategoriesController {
   }
 
   @Put(':id')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Actualizar una categoría por ID' })
   @ApiParam({ name: 'id', description: 'ID de la categoría', type: Number })
   @ApiResponse({ status: 200, description: 'Categoría actualizada exitosamente', type: CategoryEntity })
@@ -48,6 +53,8 @@ export class CategoriesController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Eliminar una categoría por ID' })
   @ApiParam({ name: 'id', description: 'ID de la categoría', type: Number })
   @ApiResponse({ status: 200, description: 'Categoría eliminada exitosamente' })

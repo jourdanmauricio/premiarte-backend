@@ -1,12 +1,15 @@
-import { Controller, Get, Post, Body, Put, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { ResponsiblesService } from './responsibles.service';
 import { CreateResponsibleDto } from './dto/create-responsible.dto';
 import { UpdateResponsibleDto } from './dto/update-responsible.dto';
 import { ResponsibleEntity } from './entities/responsible.entity';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Responsibles')
 @Controller('responsibles')
+@ApiBearerAuth('access-token')
+@UseGuards(AuthGuard('jwt'))
 export class ResponsiblesController {
   constructor(private readonly responsiblesService: ResponsiblesService) {}
 

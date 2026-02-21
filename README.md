@@ -1,85 +1,126 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Premiarte API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST del backend de **Premiarte**, construida con [NestJS](https://nestjs.com/) y TypeScript. Gestiona catálogo de productos, clientes, presupuestos, pedidos, responsables y suscripciones, con autenticación JWT y documentación Swagger.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Requisitos
 
-## Description
+- **Node.js** >= 22.10.7
+- **npm** (o yarn/pnpm)
+- Cuenta en [Turso](https://turso.tech/) (base de datos)
+- Cuenta en [Cloudinary](https://cloudinary.com/) (almacenamiento de imágenes)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## Instalación
 
 ```bash
-$ npm install
+# Clonar el repositorio (si aplica)
+git clone <url-del-repositorio>
+cd premiarte-backend
+
+# Instalar dependencias
+npm install
+
+# Copiar variables de entorno
+cp .env-example .env
+# Editar .env con tus valores (ver sección Variables de entorno)
+
+# Generar cliente Prisma y aplicar migraciones
+npx prisma generate
+npx prisma migrate dev
 ```
 
-## Compile and run the project
+## Variables de entorno
+
+Crea un archivo `.env` en la raíz del proyecto a partir de `.env-example`:
+
+| Variable | Descripción |
+|----------|-------------|
+| `PORT` | Puerto del servidor (ej. 3000) |
+| `JWT_SECRET` | Clave secreta para firmar tokens JWT |
+| `TURSO_DATABASE_URL` | URL de la base de datos Turso |
+| `TURSO_AUTH_TOKEN` | Token de autenticación Turso |
+| `DATABASE_URL` | URL de conexión usada por Prisma (p. ej. para migraciones) |
+| `ADMIN_USER_NAME` | Nombre del usuario administrador inicial |
+| `ADMIN_USER_EMAIL` | Email del administrador |
+| `ADMIN_USER_PASSWORD` | Contraseña del administrador |
+| `CLOUDINARY_CLOUD_NAME` | Nombre del cloud en Cloudinary |
+| `CLOUDINARY_API_KEY` | API Key de Cloudinary |
+| `CLOUDINARY_API_SECRET` | API Secret de Cloudinary |
+| `CLOUDINARY_FOLDER` | Carpeta por defecto para subidas |
+
+## Ejecución
 
 ```bash
-# development
-$ npm run start
+# Desarrollo (con recarga en caliente)
+npm run start:dev
 
-# watch mode
-$ npm run start:dev
+# Producción
+npm run build
+npm run start:prod
 
-# production mode
-$ npm run start:prod
+# Debug
+npm run start:debug
 ```
 
-## Deployment
+Por defecto el servidor escucha en `http://localhost:3000` (o el `PORT` definido en `.env`).
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## API y documentación
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+- **Prefijo global:** todas las rutas están bajo `/api`.
+- **Documentación Swagger:** disponible en `/docs` (p. ej. `http://localhost:3000/docs`).
+- **JSON de Swagger:** `/docs/swagger/json`.
+
+La API está protegida con **JWT**. En Swagger puedes autorizarte con el token usando el botón «Authorize» y el esquema **access-token**.
+
+## Estructura del proyecto
+
+| Módulo | Descripción |
+|--------|-------------|
+| **Auth** | Login y emisión de JWT |
+| **Users** | Usuarios del sistema |
+| **Categories** | Categorías de productos |
+| **Products** | Productos (precios, stock, imágenes, categorías) |
+| **Images** | Imágenes (subida a Cloudinary) |
+| **Customers** | Clientes (minorista/mayorista, importación) |
+| **Budgets** | Presupuestos y líneas de presupuesto |
+| **Orders** | Pedidos y líneas de pedido |
+| **Responsibles** | Responsables (CUIT, condición) |
+| **Settings** | Configuración clave-valor |
+| **Subscribe** | Suscripciones a newsletter |
+
+## Base de datos
+
+Se utiliza **Prisma** con adaptador para **Turso** (libSQL). El esquema está en `prisma/schema.prisma`.
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Crear migración
+npx prisma migrate dev --name nombre_migracion
+
+# Aplicar migraciones en producción
+npx prisma migrate deploy
+
+# Abrir Prisma Studio (opcional)
+npx prisma studio
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Scripts disponibles
 
-## Resources
+| Comando | Descripción |
+|---------|-------------|
+| `npm run build` | Compila el proyecto |
+| `npm run start` | Inicia la app (modo normal) |
+| `npm run start:dev` | Inicia en modo desarrollo con watch |
+| `npm run start:prod` | Inicia en modo producción |
+| `npm run start:debug` | Inicia en modo debug con watch |
+| `npm run lint` | Ejecuta ESLint |
+| `npm run format` | Formatea código con Prettier |
+| `npm run test` | Ejecuta tests unitarios |
+| `npm run test:e2e` | Ejecuta tests e2e |
 
-Check out a few resources that may come in handy when working with NestJS:
+## Seguridad y CORS
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- Se usa **Helmet** para cabeceras HTTP seguras.
+- CORS está configurado (origen, métodos y cabeceras permitidas en `main.ts`). Ajusta `origin` en producción según tu frontend.
 
-## Support
+## Licencia
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+UNLICENSED (proyecto privado).
