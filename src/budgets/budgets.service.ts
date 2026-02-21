@@ -59,7 +59,8 @@ export class BudgetsService {
         });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
-        const causeMsg = err instanceof Error && err.cause && typeof (err.cause as Error).message === 'string' ? (err.cause as Error).message : '';
+        const c = (err as { cause?: { message?: string; originalMessage?: string } })?.cause;
+        const causeMsg = [c?.message, c?.originalMessage].filter(Boolean).join(' ');
         const isUniquePhone = /UNIQUE constraint failed: Customer\.phone/i.test(msg) || /UNIQUE constraint failed: Customer\.phone/i.test(causeMsg);
         const isUniqueEmail = /UNIQUE constraint failed: Customer\.email/i.test(msg) || /UNIQUE constraint failed: Customer\.email/i.test(causeMsg);
         if (isUniquePhone || isUniqueEmail) {
@@ -71,20 +72,13 @@ export class BudgetsService {
           }
           if (emailNorm && !customer) customer = await this.prisma.client.customer.findFirst({ where: { email: emailNorm } });
           if (!customer) throw err;
-          await this.prisma.client.customer.update({
-            where: { id: customer.id },
-            data: { name, phone: phoneNorm ?? phone?.trim(), ...(emailNorm != null && { email: emailNorm }) },
-          });
+          // No actualizamos datos del cliente existente (seguridad: evitar que un envío público pise datos de otro)
         } else {
           throw err;
         }
       }
-    } else {
-      await this.prisma.client.customer.update({
-        where: { id: customer.id },
-        data: { name, phone: phoneNorm ?? phone?.trim(), ...(emailNorm != null && { email: emailNorm }) },
-      });
     }
+    // Si el cliente ya existía, no actualizamos name/email/phone (seguridad e integridad de datos)
 
     let totalAmount = 0;
 
