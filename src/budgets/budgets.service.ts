@@ -33,9 +33,9 @@ export class BudgetsService {
 
     const productMap = new Map(dbProducts.map((p) => [p.id, p]));
 
-    let customer = await this.prisma.client.customer.findUnique({
-      where: { email },
-    });
+    // Buscar cliente por email o por teléfono para reutilizarlo y evitar duplicados (UNIQUE en phone/email)
+    const orConditions = [...(email ? [{ email }] : []), ...(phone ? [{ phone }] : [])] as { email?: string; phone?: string }[];
+    let customer = orConditions.length ? await this.prisma.client.customer.findFirst({ where: { OR: orConditions } }) : null;
 
     if (!customer) {
       customer = await this.prisma.client.customer.create({
@@ -49,7 +49,7 @@ export class BudgetsService {
     } else {
       await this.prisma.client.customer.update({
         where: { id: customer.id },
-        data: { name, phone },
+        data: { name, phone, ...(email != null && { email }) },
       });
     }
 
