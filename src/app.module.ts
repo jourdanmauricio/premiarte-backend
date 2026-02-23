@@ -15,6 +15,7 @@ import { ResponsiblesModule } from './responsibles/responsibles.module';
 import { CustomersModule } from './customers/customers.module';
 import { OrdersModule } from './orders/orders.module';
 import { ContactsModule } from './contacts/contacts.module';
+import { NewslettersModule } from './newsletters/newsletters.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ContactsModule } from './contacts/contacts.module';
     CustomersModule,
     OrdersModule,
     ContactsModule,
+    NewslettersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
