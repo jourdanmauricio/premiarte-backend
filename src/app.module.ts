@@ -14,6 +14,7 @@ import { BudgetsModule } from './budgets/budgets.module';
 import { ResponsiblesModule } from './responsibles/responsibles.module';
 import { CustomersModule } from './customers/customers.module';
 import { OrdersModule } from './orders/orders.module';
+import { ContactsModule } from './contacts/contacts.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { OrdersModule } from './orders/orders.module';
     ResponsiblesModule,
     CustomersModule,
     OrdersModule,
+    ContactsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
