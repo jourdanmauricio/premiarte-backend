@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
+import { MailService } from 'src/mail/mail.service';
 
 /** Normaliza teléfono para búsqueda/guardado: trim y solo dígitos (evita duplicados por "11 5804-6525" vs "1158046525"). */
 function normalizePhone(phone: string | null | undefined): string | null {
@@ -13,7 +14,10 @@ function normalizePhone(phone: string | null | undefined): string | null {
 
 @Injectable()
 export class BudgetsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   async create(createBudgetDto: CreateBudgetDto) {
     const { name, email, phone, message, products } = createBudgetDto;
@@ -43,7 +47,6 @@ export class BudgetsService {
     const phoneNorm = normalizePhone(phone);
     const emailNorm = email?.trim() || null;
 
-    // Buscar cliente por email o por teléfono (normalizado) para reutilizarlo
     const orConditions = [...(emailNorm ? [{ email: emailNorm }] : []), ...(phoneNorm ? [{ phone: phoneNorm }] : [])] as { email?: string; phone?: string }[];
     let customer = orConditions.length ? await this.prisma.client.customer.findFirst({ where: { OR: orConditions } }) : null;
 
@@ -72,26 +75,21 @@ export class BudgetsService {
           }
           if (emailNorm && !customer) customer = await this.prisma.client.customer.findFirst({ where: { email: emailNorm } });
           if (!customer) throw err;
-          // No actualizamos datos del cliente existente (seguridad: evitar que un envío público pise datos de otro)
         } else {
           throw err;
         }
       }
     }
-    // Si el cliente ya existía, no actualizamos name/email/phone (seguridad e integridad de datos)
 
     let totalAmount = 0;
 
     const itemsData = products.map((item) => {
       const productId = parseInt(String(item.id), 10);
       const product = productMap.get(productId)!;
-      // const price = product.retailPrice;
       const price = customer.type === 'retail' ? Number(product.retailPrice) : Number(product.wholesalePrice);
       const quantity = item.quantity;
       const amount = price * quantity;
       totalAmount += amount;
-
-      // totalAmount += Number(price) * Number(item.quantity);
 
       return {
         productId,
@@ -120,6 +118,24 @@ export class BudgetsService {
         customer: true,
       },
     });
+    try {
+      await this.mailService.sendBudgetNotification({
+        customerName: customer.name,
+        customerEmail: customer.email || emailNorm || '-',
+        customerPhone: customer.phone || phone || '-',
+        message: message || '-',
+        totalAmount,
+        items: budget.items.map((item) => ({
+          productName: (item.product as { name?: string })?.name ?? 'Producto',
+          quantity: item.quantity,
+          price: item.price,
+          amount: item.amount,
+        })),
+      });
+    } catch (err) {
+      console.error('Error al enviar email de presupuesto:', err);
+      // No fallar la creación del presupuesto si falla el email
+    }
 
     return budget;
   }

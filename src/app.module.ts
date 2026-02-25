@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { CategoriesModule } from './categories/categories.module';
@@ -16,13 +16,35 @@ import { CustomersModule } from './customers/customers.module';
 import { OrdersModule } from './orders/orders.module';
 import { ContactsModule } from './contacts/contacts.module';
 import { NewslettersModule } from './newsletters/newsletters.module';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { EnvModels } from 'env.models';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService<EnvModels>) => ({
+        transport: {
+          host: config.getOrThrow('SMTP_HOST'),
+          port: config.get('SMTP_PORT', 587),
+          secure: false,
+          auth: {
+            user: config.getOrThrow('SMTP_USER'),
+            pass: config.getOrThrow('SMTP_PASS'),
+          },
+        },
+        defaults: {
+          from: config.get('SMTP_FROM') || '"Premiarte" <noreply@premiarte.com>',
+        },
+      }),
+    }),
     PrismaModule,
+    MailModule,
     UsersModule,
     CategoriesModule,
     AuthModule,

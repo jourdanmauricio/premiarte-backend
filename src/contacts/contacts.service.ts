@@ -1,16 +1,31 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { MailService } from 'src/mail/mail.service';
 import { CreateContactDto } from './dto/create-contact.dto';
 import { UpdateContactDto } from './dto/update-contact.dto';
 
 @Injectable()
 export class ContactsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mail: MailService,
+  ) {}
 
   async create(createContactDto: CreateContactDto) {
-    return this.prisma.client.contact.create({
+    const contact = await this.prisma.client.contact.create({
       data: createContactDto,
     });
+    try {
+      await this.mail.sendContactNotification({
+        name: createContactDto.name,
+        email: createContactDto.email,
+        phone: createContactDto.phone,
+        message: createContactDto.message,
+      });
+    } catch (err) {
+      console.error('Error al enviar email de contacto:', err);
+    }
+    return contact;
   }
 
   async findAll() {
