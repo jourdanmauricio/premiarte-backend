@@ -39,7 +39,8 @@ import { MailModule } from './mail/mail.module';
           },
         },
         defaults: {
-          from: config.get('SMTP_FROM') || '"Premiarte" <noreply@premiarte.com>',
+          // Gmail requiere que "from" coincida con la cuenta autenticada; usar solo email evita errores de codificación
+          from: config.getOrThrow('SMTP_USER'),
         },
       }),
     }),
