@@ -11,6 +11,8 @@ export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}
 
   @Post()
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   create(@Body() createSettingDto: CreateSettingDto) {
     return this.settingsService.create(createSettingDto);
   }

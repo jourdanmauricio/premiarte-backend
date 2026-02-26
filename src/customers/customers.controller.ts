@@ -1,14 +1,17 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, UploadedFile, UseInterceptors } from '@nestjs/common';
-import { ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { ImportCustomersResultDto } from './dto/import-customers-result.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { CustomerEntity } from './entities/customer.entity';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Customers')
 @Controller('customers')
+@ApiBearerAuth('access-token')
+@UseGuards(AuthGuard('jwt'))
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 
@@ -39,7 +42,7 @@ export class CustomersController {
     }
     const buffer = file.buffer;
     const filename = file.originalname ?? '';
-    /* eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call */
+
     return this.customersService.importFromFile(buffer, filename);
   }
 

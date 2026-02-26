@@ -80,6 +80,8 @@ export class ProductsController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Eliminar un producto por ID' })
   @ApiParam({ name: 'id', description: 'ID del producto', type: Number })
   @ApiResponse({ status: 200, description: 'Producto eliminado exitosamente' })
