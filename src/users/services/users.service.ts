@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 import * as bcrypt from 'bcrypt';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
@@ -48,8 +47,8 @@ export class UsersService {
     return user;
   }
 
-  findOneByEmail(email: string) {
-    const user = this.prisma.client.user.findUnique({
+  async findOneByEmail(email: string): Promise<UserPublic> {
+    const user = await this.prisma.client.user.findUnique({
       where: { email },
       select: this.userSelect,
     });
@@ -101,6 +100,15 @@ export class UsersService {
       where: { id },
       data: user,
       select: this.userSelect,
+    });
+  }
+
+  async setPasswordById(id: string, newPassword: string): Promise<void> {
+    const saltOrRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltOrRounds);
+    await this.prisma.client.user.update({
+      where: { id },
+      data: { password: hashedPassword },
     });
   }
 

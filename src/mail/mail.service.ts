@@ -93,4 +93,19 @@ export class MailService {
       text: `Nueva consulta de contacto de ${data.name} (${data.email}). Mensaje: ${data.message}`,
     });
   }
+
+  async sendForgotPasswordEmail(email: string, token: string): Promise<void> {
+    const html = `
+    <h2>Recuperación de contraseña</h2>
+      <p>Para recuperar tu contraseña, ingresa al siguiente enlace:</p>
+      <a href="https://premiartedashboard.lumau.com.ar/reset-password?token=${token}">Recuperar contraseña</a>
+    `;
+
+    await this.mailer.sendMail({
+      to: email,
+      subject: 'Recuperación de contraseña',
+      html,
+      text: `Recuperación de contraseña para ${email}. Ingresar al siguiente enlace para recuperar la contraseña: https://premiartedashboard.lumau.com.ar/reset-password?token=${token}`,
+    });
+  }
 }

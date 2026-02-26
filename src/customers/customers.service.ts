@@ -140,8 +140,7 @@ export class CustomersService {
 
     const normalize = (v: unknown): string => (v == null || v === '' ? '' : String(v).trim());
     const optional = (v: string): string | undefined => (v === '' ? undefined : v);
-    const typeValue = (v: string): 'retail' | 'wholesale' =>
-      v === 'wholesale' ? 'wholesale' : 'retail';
+    const typeValue = (v: string): 'retail' | 'wholesale' => (v === 'wholesale' ? 'wholesale' : 'retail');
 
     for (let i = 0; i < rows.length; i++) {
       const rowIndex = i + 2; // 1-based + header
