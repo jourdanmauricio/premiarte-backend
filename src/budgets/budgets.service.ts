@@ -20,15 +20,63 @@ export class BudgetsService {
   ) {}
 
   async create(createBudgetDto: CreateBudgetDto) {
-    const { name, email, phone, message, products } = createBudgetDto;
+    const { customerId, name, email, phone, message, observation, responsibleId, expiresAt, type, totalAmount: dtoTotalAmount, status, products } = createBudgetDto;
 
     if (!products?.length) {
       throw new BadRequestException('Debe incluir al menos un producto');
     }
 
-    const productIds = products.map((p) => parseInt(String(p.id), 10));
+    // Resolver cliente: por customerId (dashboard) o por name/email/phone (front)
+    let customer: { id: string; name: string; email: string | null; phone: string | null; type: string };
+    if (customerId) {
+      const found = await this.prisma.client.customer.findUnique({ where: { id: customerId } });
+      if (!found) throw new BadRequestException(`Cliente no encontrado: ${customerId}`);
+      customer = found;
+    } else {
+      if (!name || !email || !phone) throw new BadRequestException('Cuando no se envía customerId, name, email y phone son requeridos');
+      const phoneNorm = normalizePhone(phone);
+      const emailNorm = email?.trim() || null;
+      const orConditions = [...(emailNorm ? [{ email: emailNorm }] : []), ...(phoneNorm ? [{ phone: phoneNorm }] : [])] as {
+        email?: string;
+        phone?: string;
+      }[];
+      let c = orConditions.length ? await this.prisma.client.customer.findFirst({ where: { OR: orConditions } }) : null;
+      if (!c) {
+        try {
+          c = await this.prisma.client.customer.create({
+            data: {
+              name,
+              email: emailNorm ?? undefined,
+              phone: phoneNorm ?? phone?.trim() ?? undefined,
+              type: 'retail',
+            },
+          });
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          const cause = (err as { cause?: { message?: string; originalMessage?: string } })?.cause;
+          const causeMsg = [cause?.message, cause?.originalMessage].filter(Boolean).join(' ');
+          const isUniquePhone = /UNIQUE constraint failed: Customer\.phone/i.test(msg) || /UNIQUE constraint failed: Customer\.phone/i.test(causeMsg);
+          const isUniqueEmail = /UNIQUE constraint failed: Customer\.email/i.test(msg) || /UNIQUE constraint failed: Customer\.email/i.test(causeMsg);
+          if (isUniquePhone || isUniqueEmail) {
+            c = orConditions.length ? await this.prisma.client.customer.findFirst({ where: { OR: orConditions } }) : null;
+            if (phoneNorm && !c) c = await this.prisma.client.customer.findFirst({ where: { phone: phoneNorm } });
+            if (phoneNorm && !c) {
+              const withPhone = await this.prisma.client.customer.findMany({ where: { phone: { not: null } } });
+              c = withPhone.find((x) => normalizePhone(x.phone) === phoneNorm) ?? null;
+            }
+            if (emailNorm && !c) c = await this.prisma.client.customer.findFirst({ where: { email: emailNorm } });
+            if (!c) throw err;
+          } else {
+            throw err;
+          }
+        }
+      }
+      customer = c;
+    }
+
+    const productIds = products.map((p) => parseInt(String(p.id ?? p.productId), 10));
     if (productIds.some((id) => Number.isNaN(id))) {
-      throw new BadRequestException('IDs de producto inválidos');
+      throw new BadRequestException('IDs de producto inválidos: cada ítem debe tener id o productId');
     }
 
     const dbProducts = await this.prisma.client.product.findMany({
@@ -43,52 +91,24 @@ export class BudgetsService {
     }
 
     const productMap = new Map(dbProducts.map((p) => [p.id, p]));
-
-    const phoneNorm = normalizePhone(phone);
-    const emailNorm = email?.trim() || null;
-
-    const orConditions = [...(emailNorm ? [{ email: emailNorm }] : []), ...(phoneNorm ? [{ phone: phoneNorm }] : [])] as { email?: string; phone?: string }[];
-    let customer = orConditions.length ? await this.prisma.client.customer.findFirst({ where: { OR: orConditions } }) : null;
-
-    if (!customer) {
-      try {
-        customer = await this.prisma.client.customer.create({
-          data: {
-            name,
-            email: emailNorm ?? undefined,
-            phone: phoneNorm ?? phone?.trim() ?? undefined,
-            type: 'retail',
-          },
-        });
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        const c = (err as { cause?: { message?: string; originalMessage?: string } })?.cause;
-        const causeMsg = [c?.message, c?.originalMessage].filter(Boolean).join(' ');
-        const isUniquePhone = /UNIQUE constraint failed: Customer\.phone/i.test(msg) || /UNIQUE constraint failed: Customer\.phone/i.test(causeMsg);
-        const isUniqueEmail = /UNIQUE constraint failed: Customer\.email/i.test(msg) || /UNIQUE constraint failed: Customer\.email/i.test(causeMsg);
-        if (isUniquePhone || isUniqueEmail) {
-          customer = orConditions.length ? await this.prisma.client.customer.findFirst({ where: { OR: orConditions } }) : null;
-          if (phoneNorm && !customer) customer = await this.prisma.client.customer.findFirst({ where: { phone: phoneNorm } });
-          if (phoneNorm && !customer) {
-            const withPhone = await this.prisma.client.customer.findMany({ where: { phone: { not: null } } });
-            customer = withPhone.find((c) => normalizePhone(c.phone) === phoneNorm) ?? null;
-          }
-          if (emailNorm && !customer) customer = await this.prisma.client.customer.findFirst({ where: { email: emailNorm } });
-          if (!customer) throw err;
-        } else {
-          throw err;
-        }
-      }
-    }
+    const isDashboardFlow = products.some((p) => p.price != null && p.amount != null);
 
     let totalAmount = 0;
-
     const itemsData = products.map((item) => {
-      const productId = parseInt(String(item.id), 10);
+      const productId = parseInt(String(item.id ?? item.productId), 10);
       const product = productMap.get(productId)!;
-      const price = customer.type === 'retail' ? Number(product.retailPrice) : Number(product.wholesalePrice);
-      const quantity = item.quantity;
-      const amount = price * quantity;
+      let price: number;
+      let quantity: number;
+      let amount: number;
+      if (item.price != null && item.amount != null) {
+        price = Number(item.price);
+        amount = Number(item.amount);
+        quantity = item.quantity ?? (price > 0 ? Math.round(amount / price) : 1);
+      } else {
+        price = customer.type === 'retail' ? Number(product.retailPrice) : Number(product.wholesalePrice);
+        quantity = item.quantity ?? 1;
+        amount = price * quantity;
+      }
       totalAmount += amount;
 
       return {
@@ -98,15 +118,22 @@ export class BudgetsService {
         amount,
         retailPrice: product.retailPrice,
         wholesalePrice: product.wholesalePrice,
+        observation: item.observation ?? undefined,
       };
     });
+
+    const obs = observation ?? message;
+    const finalTotal = dtoTotalAmount != null ? Number(dtoTotalAmount) : totalAmount;
 
     const budget = await this.prisma.client.budget.create({
       data: {
         customerId: customer.id,
-        observation: message,
-        totalAmount,
-        status: 'pending',
+        observation: obs ?? undefined,
+        totalAmount: finalTotal,
+        status: status ?? 'pending',
+        ...(responsibleId != null && { responsibleId }),
+        ...(expiresAt != null && { expiresAt: new Date(expiresAt) }),
+        ...(type != null && { type }),
         items: {
           create: itemsData,
         },
@@ -118,23 +145,25 @@ export class BudgetsService {
         customer: true,
       },
     });
-    try {
-      await this.mailService.sendBudgetNotification({
-        customerName: customer.name,
-        customerEmail: customer.email || emailNorm || '-',
-        customerPhone: customer.phone || phone || '-',
-        message: message || '-',
-        totalAmount,
-        items: budget.items.map((item) => ({
-          productName: (item.product as { name?: string })?.name ?? 'Producto',
-          quantity: item.quantity,
-          price: item.price,
-          amount: item.amount,
-        })),
-      });
-    } catch (err) {
-      console.error('Error al enviar email de presupuesto:', err);
-      // No fallar la creación del presupuesto si falla el email
+
+    if (!isDashboardFlow) {
+      try {
+        await this.mailService.sendBudgetNotification({
+          customerName: customer.name,
+          customerEmail: customer.email || email?.trim() || '-',
+          customerPhone: customer.phone || phone || '-',
+          message: obs || '-',
+          totalAmount: finalTotal,
+          items: budget.items.map((item) => ({
+            productName: (item.product as { name?: string })?.name ?? 'Producto',
+            quantity: item.quantity,
+            price: item.price,
+            amount: item.amount,
+          })),
+        });
+      } catch (err) {
+        console.error('Error al enviar email de presupuesto:', err);
+      }
     }
 
     return budget;
