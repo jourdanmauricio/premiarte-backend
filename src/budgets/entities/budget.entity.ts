@@ -8,6 +8,9 @@ export class BudgetEntity {
   @ApiProperty({ description: 'ID del cliente (UUID)' })
   customerId: string;
 
+  @ApiProperty({ description: 'Indica si se muestra el CUIT en el PDF', default: false })
+  showCuit: boolean;
+
   @ApiPropertyOptional({ description: 'Observación' })
   observation?: string | null;
 

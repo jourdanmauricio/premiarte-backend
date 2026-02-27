@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsEmail, IsArray, ValidateNested, IsInt, Min, IsOptional, IsNumberString, ValidateIf, IsDateString } from 'class-validator';
+import { IsString, IsEmail, IsArray, ValidateNested, IsInt, Min, IsOptional, IsBoolean, IsNumberString, ValidateIf, IsDateString } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateBudgetProductItemDto {
@@ -118,6 +118,11 @@ export class CreateBudgetDto {
   @IsString()
   @IsOptional()
   status?: string;
+
+  @ApiPropertyOptional({ description: 'Indica si se muestra el CUIT en el PDF', example: false, default: false })
+  @IsBoolean()
+  @IsOptional()
+  showCuit?: boolean;
 
   @ApiProperty({
     description: 'Productos a cotizar',

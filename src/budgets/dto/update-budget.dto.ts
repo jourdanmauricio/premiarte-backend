@@ -82,6 +82,11 @@ export class UpdateBudgetDto {
   @IsOptional()
   customerId?: string;
 
+  @ApiPropertyOptional({ description: 'Indica si se muestra el CUIT en el PDF' })
+  @IsBoolean()
+  @IsOptional()
+  showCuit?: boolean;
+
   @ApiPropertyOptional({
     description: 'Productos a cotizar',
     type: [UpdateBudgetProductItemDto],

@@ -5,6 +5,9 @@ import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
 import { MailService } from 'src/mail/mail.service';
 
+type BudgetItemWithProduct = { product: { name?: string }; quantity: number; price: number; amount: number };
+type MailBudgetItem = { productName: string; quantity: number; price: number; amount: number };
+
 /** Normaliza teléfono para búsqueda/guardado: trim y solo dígitos (evita duplicados por "11 5804-6525" vs "1158046525"). */
 function normalizePhone(phone: string | null | undefined): string | null {
   if (phone == null || phone === '') return null;
@@ -20,7 +23,7 @@ export class BudgetsService {
   ) {}
 
   async create(createBudgetDto: CreateBudgetDto) {
-    const { customerId, name, email, phone, message, observation, responsibleId, expiresAt, type, totalAmount: dtoTotalAmount, status, products } = createBudgetDto;
+    const { customerId, name, email, phone, message, observation, responsibleId, expiresAt, type, totalAmount: dtoTotalAmount, status, showCuit, products } = createBudgetDto;
 
     if (!products?.length) {
       throw new BadRequestException('Debe incluir al menos un producto');
@@ -124,42 +127,55 @@ export class BudgetsService {
 
     const obs = observation ?? message;
     const finalTotal = dtoTotalAmount != null ? Number(dtoTotalAmount) : totalAmount;
+    const showCuitValue: boolean = showCuit === true;
 
-    const budget = await this.prisma.client.budget.create({
-      data: {
-        customerId: customer.id,
-        observation: obs ?? undefined,
-        totalAmount: finalTotal,
-        status: status ?? 'pending',
-        ...(responsibleId != null && { responsibleId }),
-        ...(expiresAt != null && { expiresAt: new Date(expiresAt) }),
-        ...(type != null && { type }),
-        items: {
-          create: itemsData,
+    const budget = await this.prisma.client.$transaction(async (tx) => {
+      const last = (await tx.budget.findFirst({
+        orderBy: { number: 'desc' },
+        select: { number: true },
+      })) as { number: number } | null;
+      const nextNumber = (last?.number ?? 399) + 1;
+      return tx.budget.create({
+        data: {
+          number: nextNumber,
+          customerId: customer.id,
+          showCuit: showCuitValue,
+          observation: obs ?? undefined,
+          totalAmount: finalTotal,
+          status: status ?? 'pending',
+          ...(responsibleId != null && { responsibleId }),
+          ...(expiresAt != null && { expiresAt: new Date(expiresAt) }),
+          ...(type != null && { type }),
+          items: {
+            create: itemsData,
+          },
         },
-      },
-      include: {
-        items: {
-          include: { product: true },
+        include: {
+          items: {
+            include: { product: true },
+          },
+          customer: true,
         },
-        customer: true,
-      },
+      });
     });
 
     if (!isDashboardFlow) {
       try {
+        const items = (budget.items as BudgetItemWithProduct[]).map(
+          (item): MailBudgetItem => ({
+            productName: item.product?.name ?? 'Producto',
+            quantity: item.quantity,
+            price: item.price,
+            amount: item.amount,
+          }),
+        );
         await this.mailService.sendBudgetNotification({
           customerName: customer.name,
           customerEmail: customer.email || email?.trim() || '-',
           customerPhone: customer.phone || phone || '-',
           message: obs || '-',
           totalAmount: finalTotal,
-          items: budget.items.map((item) => ({
-            productName: (item.product as { name?: string })?.name ?? 'Producto',
-            quantity: item.quantity,
-            price: item.price,
-            amount: item.amount,
-          })),
+          items,
         });
       } catch (err) {
         console.error('Error al enviar email de presupuesto:', err);

@@ -9,7 +9,9 @@ datasource db {
 
 model Budget {
   id            String       @id @default(uuid())
+  number        Int          @unique
   customerId    String
+  showCuit      Boolean      @default(false)
   observation   String?
   totalAmount   Int          @default(0)
   status        String       @default("pending")
