@@ -7,6 +7,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class SettingsService {
   constructor(private readonly prisma: PrismaService) {}
   create(createSettingDto: CreateSettingDto) {
+    console.log('createSettingDto', createSettingDto);
     return 'This action adds a new setting';
   }
 
@@ -58,9 +59,18 @@ export class SettingsService {
   }
 
   async update(id: number, updateSettingDto: UpdateSettingDto) {
-    const setting = await this.prisma.client.setting.update({
+    const setting = await this.findOne(id);
+    if (!setting) {
+      throw new NotFoundException('Setting not found');
+    }
+
+    const value = JSON.parse(setting.value) as Record<string, any>;
+    value[updateSettingDto.key ?? ''] = updateSettingDto.value ?? '';
+    setting.value = JSON.stringify(value);
+
+    await this.prisma.client.setting.update({
       where: { id },
-      data: updateSettingDto,
+      data: { value: setting.value },
     });
     return setting;
   }
