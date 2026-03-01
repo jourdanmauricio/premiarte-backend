@@ -64,14 +64,21 @@ export class SettingsService {
       throw new NotFoundException('Setting not found');
     }
 
-    const value = JSON.parse(setting.value) as Record<string, any>;
-    value[updateSettingDto.key ?? ''] = updateSettingDto.value ?? '';
-    setting.value = JSON.stringify(value);
+    let newValue: string;
 
-    await this.prisma.client.setting.update({
+    // Si la key del DTO coincide con la key del setting → reemplazo completo
+    if (updateSettingDto.key === setting.key) {
+      newValue = typeof updateSettingDto.value === 'string' ? updateSettingDto.value : JSON.stringify(updateSettingDto.value);
+    } else {
+      // Actualización parcial: merge en el objeto existente
+      const value = JSON.parse(setting.value) as Record<string, any>;
+      value[updateSettingDto.key ?? ''] = updateSettingDto.value ?? '';
+      newValue = JSON.stringify(value);
+    }
+
+    return this.prisma.client.setting.update({
       where: { id },
-      data: { value: setting.value },
+      data: { value: newValue },
     });
-    return setting;
   }
 }
