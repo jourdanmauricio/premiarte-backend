@@ -113,19 +113,13 @@ export class MailService {
     const date = new Date().toISOString().split('T')[0];
     const filename = `backup_${process.env.TURSO_DB_NAME}_${date}.sql`;
 
-    const to = this.config.getOrThrow('BACKUP_EMAIL_RECIPIENT', { infer: true });
+    const to = this.config.get('BACKUP_EMAIL_RECIPIENT', { infer: true });
     if (!to) {
       console.warn('BACKUP_EMAIL_RECIPIENT no configurado, no se envía email de backup');
       return;
     }
-    const from = this.config.getOrThrow('SMTP_FROM', { infer: true });
-    if (!from) {
-      console.warn('SMTP_FROM no configurado, no se envía email de backup');
-      return;
-    }
 
     await this.mailer.sendMail({
-      from,
       to,
       subject: `Backup BD - ${date}`,
       text: `Adjunto encontrás el backup de la base de datos generado el ${date}.`,
