@@ -31,6 +31,12 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=6001
 
+# Instalar Turso CLI (necesario para el backup con turso db shell .dump)
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
+  && curl -sSfL https://get.tur.so/install.sh | bash \
+  && cp /root/.turso/bin/turso /usr/local/bin/ \
+  && apt-get purge -y curl && apt-get autoremove -y --purge && rm -rf /var/lib/apt/lists/*
+
 # Copiar artefactos: dist, Prisma y node_modules (incluye Prisma Client ya generado)
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
