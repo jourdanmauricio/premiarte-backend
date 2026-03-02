@@ -17,4 +17,8 @@ export interface EnvModels {
   SMTP_FROM?: string;
   BUDGET_NOTIFICATION_EMAIL?: string;
   CONTACT_NOTIFICATION_EMAIL?: string;
+  BACKUP_EMAIL_RECIPIENT?: string;
+  TURSO_ORG: string;
+  TURSO_DB_NAME: string;
+  TURSO_API_TOKEN: string;
 }

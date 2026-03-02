@@ -19,6 +19,8 @@ import { NewslettersModule } from './newsletters/newsletters.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { EnvModels } from 'env.models';
 import { MailModule } from './mail/mail.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { BackupModule } from './backup/backup.module';
 
 @Module({
   imports: [
@@ -44,6 +46,8 @@ import { MailModule } from './mail/mail.module';
         },
       }),
     }),
+    ScheduleModule.forRoot(),
+    BackupModule,
     PrismaModule,
     MailModule,
     UsersModule,

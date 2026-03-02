@@ -241,3 +241,13 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 }
+
+model BackupLog {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now()) @map("created_at")
+  status      String // 'success' | 'error'
+  message     String
+  triggeredBy String   @map("triggered_by") // 'cron' | 'manual'
+
+  @@map("backup_logs")
+}

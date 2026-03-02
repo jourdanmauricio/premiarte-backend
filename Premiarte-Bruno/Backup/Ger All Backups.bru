@@ -1,0 +1,20 @@
+meta {
+  name: Ger All Backups
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{url}}/backup/logs
+  body: none
+  auth: inherit
+}
+
+script:pre-request {
+  req.setHeader("Authorization", "Bearer {{access_token}}");
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
