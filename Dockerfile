@@ -32,10 +32,16 @@ ENV NODE_ENV=production
 ENV PORT=6001
 
 # Instalar Turso CLI (necesario para el backup con turso db shell .dump)
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
-  && curl -sSfL https://get.tur.so/install.sh | bash \
-  && cp /root/.turso/bin/turso /usr/local/bin/ \
-  && apt-get purge -y curl && apt-get autoremove -y --purge && rm -rf /var/lib/apt/lists/*
+# Descarga directa desde GitHub releases (más fiable que get.tur.so en Docker)
+ARG TURSO_VERSION=0.5.0-pre.16
+ARG TARGETARCH
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates xz-utils \
+  && ARCH=$(case ${TARGETARCH} in amd64) echo x86_64 ;; arm64) echo aarch64 ;; *) echo x86_64 ;; esac) \
+  && curl -sSfL "https://github.com/tursodatabase/turso/releases/download/v${TURSO_VERSION}/turso_cli-${ARCH}-unknown-linux-gnu.tar.xz" -o /tmp/turso.tar.xz \
+  && tar -xf /tmp/turso.tar.xz -C /usr/local/bin turso \
+  && chmod +x /usr/local/bin/turso \
+  && rm /tmp/turso.tar.xz \
+  && apt-get purge -y curl xz-utils && apt-get autoremove -y --purge && rm -rf /var/lib/apt/lists/*
 
 # Copiar artefactos: dist, Prisma y node_modules (incluye Prisma Client ya generado)
 COPY --from=builder /app/dist ./dist
