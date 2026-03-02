@@ -38,9 +38,11 @@ ARG TARGETARCH
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates xz-utils \
   && ARCH=$(case ${TARGETARCH} in amd64) echo x86_64 ;; arm64) echo aarch64 ;; *) echo x86_64 ;; esac) \
   && curl -sSfL "https://github.com/tursodatabase/turso/releases/download/v${TURSO_VERSION}/turso_cli-${ARCH}-unknown-linux-gnu.tar.xz" -o /tmp/turso.tar.xz \
-  && tar -xf /tmp/turso.tar.xz -C /usr/local/bin turso \
+  && mkdir -p /tmp/turso-extract \
+  && tar -xf /tmp/turso.tar.xz -C /tmp/turso-extract \
+  && find /tmp/turso-extract -name "turso" -type f -exec mv {} /usr/local/bin/turso \; \
   && chmod +x /usr/local/bin/turso \
-  && rm /tmp/turso.tar.xz \
+  && rm -rf /tmp/turso.tar.xz /tmp/turso-extract \
   && apt-get purge -y curl xz-utils && apt-get autoremove -y --purge && rm -rf /var/lib/apt/lists/*
 
 # Copiar artefactos: dist, Prisma y node_modules (incluye Prisma Client ya generado)
