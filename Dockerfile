@@ -36,9 +36,9 @@ ENV PORT=6001
 # El binario queda en /root/.turso; se expone con ENV PATH para todos los usuarios (incluyendo nestjs).
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates xz-utils \
   && (curl -sSfL https://get.tur.so/install.sh | bash || true) \
+  && cp /root/.turso/turso /usr/local/bin/turso \
+  && chmod +x /usr/local/bin/turso \
   && apt-get purge -y curl xz-utils && apt-get autoremove -y --purge && rm -rf /var/lib/apt/lists/*
-
-ENV PATH="/root/.turso:${PATH}"
 
 # Copiar artefactos: dist, Prisma y node_modules (incluye Prisma Client ya generado)
 COPY --from=builder /app/dist ./dist
