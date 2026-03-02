@@ -32,18 +32,13 @@ ENV NODE_ENV=production
 ENV PORT=6001
 
 # Instalar Turso CLI (necesario para el backup con turso db shell .dump)
-# Descarga directa desde GitHub releases (más fiable que get.tur.so en Docker)
-ARG TURSO_VERSION=0.5.0-pre.16
-ARG TARGETARCH
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates xz-utils \
-  && ARCH=$(case ${TARGETARCH} in amd64) echo x86_64 ;; arm64) echo aarch64 ;; *) echo x86_64 ;; esac) \
-  && curl -sSfL "https://github.com/tursodatabase/turso/releases/download/v${TURSO_VERSION}/turso_cli-${ARCH}-unknown-linux-gnu.tar.xz" -o /tmp/turso.tar.xz \
-  && mkdir -p /tmp/turso-extract \
-  && tar -xf /tmp/turso.tar.xz -C /tmp/turso-extract \
-  && find /tmp/turso-extract -name "turso" -type f -exec mv {} /usr/local/bin/turso \; \
-  && chmod +x /usr/local/bin/turso \
-  && rm -rf /tmp/turso.tar.xz /tmp/turso-extract \
-  && apt-get purge -y curl xz-utils && apt-get autoremove -y --purge && rm -rf /var/lib/apt/lists/*
+# El instalador oficial falla con exit code por intentar modificar .bashrc en Docker,
+# por eso se usa || true y se verifica manualmente que el binario quedó instalado.
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
+  && (curl -sSfL https://get.tur.so/install.sh | bash || true) \
+  && ln -sf /root/.turso/bin/turso /usr/local/bin/turso \
+  && turso --version \
+  && apt-get purge -y curl && apt-get autoremove -y --purge && rm -rf /var/lib/apt/lists/*
 
 # Copiar artefactos: dist, Prisma y node_modules (incluye Prisma Client ya generado)
 COPY --from=builder /app/dist ./dist
