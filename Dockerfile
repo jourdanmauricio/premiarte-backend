@@ -32,13 +32,13 @@ ENV NODE_ENV=production
 ENV PORT=6001
 
 # Instalar Turso CLI (necesario para el backup con turso db shell .dump)
-# El instalador oficial falla con exit code por intentar modificar .bashrc en Docker,
-# por eso se usa || true y se verifica manualmente que el binario quedó instalado.
+# El instalador falla con exit code al intentar modificar .bashrc en Docker — se usa || true.
+# El binario queda en /root/.turso; se expone con ENV PATH para todos los usuarios (incluyendo nestjs).
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates xz-utils \
   && (curl -sSfL https://get.tur.so/install.sh | bash || true) \
-  && ln -sf /root/.turso/bin/turso /usr/local/bin/turso \
-  && turso --version \
   && apt-get purge -y curl xz-utils && apt-get autoremove -y --purge && rm -rf /var/lib/apt/lists/*
+
+ENV PATH="/root/.turso:${PATH}"
 
 # Copiar artefactos: dist, Prisma y node_modules (incluye Prisma Client ya generado)
 COPY --from=builder /app/dist ./dist
