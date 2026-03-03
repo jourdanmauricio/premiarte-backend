@@ -7,14 +7,6 @@ isProject: false
 
 # Plan: Variantes de productos para e-commerce
 
-## Cómo funciona el modo Plan
-
-1. Yo investigo el codebase y propongo cambios sin ejecutarlos
-2. Tú revisas el plan y lo apruebas (o pedís ajustes)
-3. Una vez aprobado, pasás a modo Agent y yo implemento los cambios
-
----
-
 ## Estado actual (resumen)
 
 | Entidad        | Stock         | Precios                                             | Imágenes                       |
