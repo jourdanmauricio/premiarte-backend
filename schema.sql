@@ -1,198 +1,290 @@
-CREATE TABLE Budget (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  customerId INTEGER NOT NULL,
-  observation TEXT,
-  totalAmount INTEGER DEFAULT 0,
-  status TEXT DEFAULT 'pending',
-  userId TEXT,
-  isRead BOOLEAN DEFAULT FALSE,
-  expiresAt DATETIME,
-  approvedAt DATETIME,
-  rejectedAt DATETIME,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP, type TEXT, responsibleId INTEGER,
-  FOREIGN KEY (customerId) REFERENCES Customer(id)
+-- Schema actual del proyecto (refleja Prisma + migraciones aplicadas).
+-- Incluye variantes de productos, Budget/Order con UUID, Customer con email/phone opcionales, User y BackupLog.
+
+-- Customer (id UUID) debe existir antes de Budget y Order
+CREATE TABLE "Customer" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "name" TEXT NOT NULL,
+  "email" TEXT,
+  "phone" TEXT,
+  "type" TEXT NOT NULL DEFAULT 'retail',
+  "document" TEXT,
+  "address" TEXT,
+  "observation" TEXT,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-CREATE INDEX idx_budget_customer_id ON Budget(customerId);
-CREATE INDEX idx_budget_status ON Budget(status);
-CREATE INDEX idx_budget_created_at ON Budget(createdAt);
-CREATE INDEX idx_budget_user_id ON Budget(userId);
-CREATE INDEX idx_budget_responsible_id ON Budget(responsibleId);
+CREATE UNIQUE INDEX "Customer_email_key" ON "Customer"("email");
+CREATE UNIQUE INDEX "Customer_phone_key" ON "Customer"("phone");
+CREATE INDEX "Customer_type_idx" ON "Customer"("type");
+CREATE INDEX "Customer_createdAt_idx" ON "Customer"("createdAt");
 
-CREATE TABLE "BudgetItem" (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  budgetId INTEGER NOT NULL,
-  productId INTEGER NOT NULL,
-  price INTEGER NOT NULL, -- precio unitario en centavos al momento de la cotización
-  quantity INTEGER NOT NULL,
-  amount INTEGER NOT NULL, -- precio total del item (price * quantity)
-  observation TEXT, -- observaciones específicas del item
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP, retailPrice INTEGER NOT NULL DEFAULT 0, wholesalePrice INTEGER NOT NULL DEFAULT 0,
-  FOREIGN KEY (budgetId) REFERENCES Budget(id) ON DELETE CASCADE,
-  FOREIGN KEY (productId) REFERENCES Product(id)
+CREATE TABLE "Budget" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "number" INTEGER NOT NULL,
+  "customerId" TEXT NOT NULL,
+  "showCuit" BOOLEAN NOT NULL DEFAULT 0,
+  "observation" TEXT,
+  "totalAmount" INTEGER NOT NULL DEFAULT 0,
+  "status" TEXT NOT NULL DEFAULT 'pending',
+  "userId" TEXT,
+  "isRead" BOOLEAN NOT NULL DEFAULT 0,
+  "expiresAt" DATETIME,
+  "approvedAt" DATETIME,
+  "rejectedAt" DATETIME,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "type" TEXT,
+  "responsibleId" INTEGER,
+  FOREIGN KEY ("customerId") REFERENCES "Customer"("id")
 );
-CREATE INDEX idx_budget_item_budget_id ON BudgetItem(budgetId);
+CREATE UNIQUE INDEX "Budget_number_key" ON "Budget"("number");
+CREATE INDEX "Budget_customerId_idx" ON "Budget"("customerId");
+CREATE INDEX "Budget_status_idx" ON "Budget"("status");
+CREATE INDEX "Budget_createdAt_idx" ON "Budget"("createdAt");
+CREATE INDEX "Budget_userId_idx" ON "Budget"("userId");
+CREATE INDEX "Budget_responsibleId_idx" ON "Budget"("responsibleId");
 
-CREATE TABLE Category (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  slug TEXT NOT NULL UNIQUE,
-  description TEXT NOT NULL,
-  imageId INTEGER NOT NULL,
-  featured BOOLEAN DEFAULT FALSE,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (imageId) REFERENCES Image(id)
-);
-
-CREATE TABLE Contact (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  email TEXT NOT NULL,
-  phone TEXT,
-  message TEXT NOT NULL,
-  isRead BOOLEAN DEFAULT FALSE,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE "Image" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "url" TEXT NOT NULL,
+  "alt" TEXT NOT NULL,
+  "tag" TEXT,
+  "observation" TEXT,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "publicId" TEXT
 );
 
-CREATE TABLE Customer (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  email TEXT NOT NULL UNIQUE,
-  phone TEXT NOT NULL,
-  type TEXT NOT NULL DEFAULT 'retail' CHECK (type IN ('wholesale', 'retail')),
-  document TEXT, -- opcional
-  address TEXT, -- opcional
-  observation TEXT, -- opcional
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE "Category" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "name" TEXT NOT NULL,
+  "slug" TEXT NOT NULL,
+  "description" TEXT NOT NULL,
+  "imageId" INTEGER NOT NULL,
+  "featured" BOOLEAN NOT NULL DEFAULT 0,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY ("imageId") REFERENCES "Image"("id")
 );
-CREATE UNIQUE INDEX idx_customer_email_unique ON Customer(email);
-CREATE INDEX idx_customer_type ON Customer(type);
-CREATE INDEX idx_customer_created_at ON Customer(createdAt);
+CREATE UNIQUE INDEX "Category_slug_key" ON "Category"("slug");
 
-CREATE TABLE Image (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  url TEXT NOT NULL,
-  alt TEXT NOT NULL,
-  tag TEXT,
-  observation TEXT,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
-, publicId TEXT);
+CREATE TABLE "Contact" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "name" TEXT NOT NULL,
+  "email" TEXT NOT NULL,
+  "phone" TEXT,
+  "message" TEXT NOT NULL,
+  "isRead" BOOLEAN NOT NULL DEFAULT 0,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
-CREATE TABLE NewsletterSubscriber (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL UNIQUE,
-        isActive BOOLEAN DEFAULT TRUE,
-        subscribedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-        unsubscribedAt DATETIME,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
-      );
-CREATE UNIQUE INDEX idx_newsletter_email_unique ON NewsletterSubscriber(email);
+CREATE TABLE "NewsletterSubscriber" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "name" TEXT NOT NULL,
+  "email" TEXT NOT NULL,
+  "isActive" BOOLEAN NOT NULL DEFAULT 1,
+  "subscribedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "unsubscribedAt" DATETIME,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX "NewsletterSubscriber_email_key" ON "NewsletterSubscriber"("email");
 
 CREATE TABLE "Order" (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        customerId INTEGER NOT NULL,
-        type TEXT NOT NULL,
-        status TEXT NOT NULL,
-        totalAmount INTEGER NOT NULL,
-        observation TEXT,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (customerId) REFERENCES Customer(id)
-      );
-
-CREATE TABLE OrderItem (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  orderId INTEGER NOT NULL,
-  productId INTEGER NOT NULL,
-  price INTEGER NOT NULL,
-  retailPrice INTEGER NOT NULL,
-  wholesalePrice INTEGER NOT NULL,
-  quantity INTEGER NOT NULL,
-  amount INTEGER NOT NULL,
-  observation TEXT,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (orderId) REFERENCES `Order`(id) ON DELETE CASCADE,
-  FOREIGN KEY (productId) REFERENCES Product(id)
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "customerId" TEXT NOT NULL,
+  "type" TEXT NOT NULL,
+  "status" TEXT NOT NULL,
+  "totalAmount" INTEGER NOT NULL,
+  "observation" TEXT,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY ("customerId") REFERENCES "Customer"("id")
 );
-CREATE INDEX idx_order_item_order_id ON OrderItem(orderId);
 
-CREATE TABLE Product (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  description TEXT NOT NULL,
-  stock INTEGER NOT NULL,
-  isActive BOOLEAN DEFAULT TRUE,
-  isFeatured BOOLEAN DEFAULT FALSE,
-  retailPrice INTEGER NOT NULL,
-  wholesalePrice INTEGER NOT NULL,
-  slug TEXT NOT NULL UNIQUE,
-  categoryId INTEGER,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP, sku TEXT, priceUpdatedAt DATETIME, priceUpdated TEXT,
-  FOREIGN KEY (categoryId) REFERENCES Category(id)
+CREATE TABLE "Product" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "name" TEXT NOT NULL,
+  "description" TEXT NOT NULL,
+  "stock" INTEGER NOT NULL,
+  "isActive" BOOLEAN NOT NULL DEFAULT 1,
+  "isFeatured" BOOLEAN NOT NULL DEFAULT 0,
+  "retailPrice" INTEGER NOT NULL,
+  "wholesalePrice" INTEGER NOT NULL,
+  "slug" TEXT NOT NULL,
+  "categoryId" INTEGER,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "sku" TEXT,
+  "priceUpdatedAt" DATETIME,
+  "priceUpdated" TEXT,
+  FOREIGN KEY ("categoryId") REFERENCES "Category"("id")
 );
-CREATE UNIQUE INDEX idx_product_sku_unique ON Product(sku) WHERE sku IS NOT NULL;
+CREATE UNIQUE INDEX "Product_slug_key" ON "Product"("slug");
+CREATE UNIQUE INDEX "Product_sku_key" ON "Product"("sku");
 
-CREATE TABLE ProductCategory (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  productId INTEGER NOT NULL,
-  categoryId INTEGER NOT NULL,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (productId) REFERENCES Product(id) ON DELETE CASCADE,
-  FOREIGN KEY (categoryId) REFERENCES Category(id) ON DELETE CASCADE,
-  UNIQUE(productId, categoryId) -- Evita duplicados
+-- Tipos de variación (catálogo global)
+CREATE TABLE "variation_types" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "name" TEXT NOT NULL
 );
-CREATE INDEX idx_product_category_product ON ProductCategory(productId);
-CREATE INDEX idx_product_category_category ON ProductCategory(categoryId);
 
-CREATE TABLE ProductImage (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  productId INTEGER NOT NULL,
-  imageId INTEGER NOT NULL,
-  order_index INTEGER DEFAULT 0, -- Para ordenar las imágenes del producto
-  isPrimary BOOLEAN DEFAULT FALSE, -- Para marcar la imagen principal
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (productId) REFERENCES Product(id) ON DELETE CASCADE,
-  FOREIGN KEY (imageId) REFERENCES Image(id) ON DELETE CASCADE,
-  UNIQUE(productId, imageId) -- Evita duplicados
+CREATE TABLE "variation_type_values" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "variation_type_id" INTEGER NOT NULL,
+  "value" TEXT NOT NULL,
+  FOREIGN KEY ("variation_type_id") REFERENCES "variation_types"("id") ON DELETE CASCADE
 );
-CREATE INDEX idx_product_image_product ON ProductImage(productId);
-CREATE INDEX idx_product_image_image ON ProductImage(imageId);
-CREATE INDEX idx_product_image_primary ON ProductImage(productId, isPrimary);
+CREATE INDEX "variation_type_values_variation_type_id_idx" ON "variation_type_values"("variation_type_id");
 
-CREATE TABLE ProductRelated (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        productId INTEGER NOT NULL,
-        relatedProductId INTEGER NOT NULL,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (productId) REFERENCES Product(id) ON DELETE CASCADE,
-        FOREIGN KEY (relatedProductId) REFERENCES Product(id) ON DELETE CASCADE,
-        UNIQUE(productId, relatedProductId)
-      );
-
-CREATE TABLE Responsible (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  cuit TEXT NOT NULL UNIQUE,
-  condition TEXT NOT NULL,
-  observation TEXT,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+-- Producto usa qué tipos de variación
+CREATE TABLE "product_variation_types" (
+  "productId" INTEGER NOT NULL,
+  "variation_type_id" INTEGER NOT NULL,
+  PRIMARY KEY ("productId", "variation_type_id"),
+  FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE CASCADE,
+  FOREIGN KEY ("variation_type_id") REFERENCES "variation_types"("id") ON DELETE CASCADE
 );
-CREATE UNIQUE INDEX idx_responsible_cuit_unique ON Responsible(cuit);
-CREATE INDEX idx_responsible_created_at ON Responsible(createdAt);
-CREATE TABLE Setting (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  key TEXT NOT NULL UNIQUE,
-  value TEXT NOT NULL,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+CREATE INDEX "product_variation_types_variation_type_id_idx" ON "product_variation_types"("variation_type_id");
+
+-- Variantes de cada producto
+CREATE TABLE "product_variants" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "product_id" INTEGER NOT NULL,
+  "sku" TEXT NOT NULL,
+  "stock" INTEGER NOT NULL,
+  "retail_price" INTEGER NOT NULL,
+  "wholesale_price" INTEGER NOT NULL,
+  "is_default" BOOLEAN NOT NULL DEFAULT 0,
+  FOREIGN KEY ("product_id") REFERENCES "Product"("id") ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX "product_variants_sku_key" ON "product_variants"("sku");
+CREATE INDEX "product_variants_product_id_idx" ON "product_variants"("product_id");
+
+-- Valores de cada variante (combinación variante + valor del catálogo)
+CREATE TABLE "product_variant_values" (
+  "variantId" INTEGER NOT NULL,
+  "variation_type_value_id" INTEGER NOT NULL,
+  PRIMARY KEY ("variantId", "variation_type_value_id"),
+  FOREIGN KEY ("variantId") REFERENCES "product_variants"("id") ON DELETE CASCADE,
+  FOREIGN KEY ("variation_type_value_id") REFERENCES "variation_type_values"("id") ON DELETE CASCADE
+);
+CREATE INDEX "product_variant_values_variation_type_value_id_idx" ON "product_variant_values"("variation_type_value_id");
+
+CREATE TABLE "BudgetItem" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "budgetId" TEXT NOT NULL,
+  "productId" INTEGER NOT NULL,
+  "productVariantId" INTEGER,
+  "price" INTEGER NOT NULL,
+  "quantity" INTEGER NOT NULL,
+  "amount" INTEGER NOT NULL,
+  "observation" TEXT,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "retailPrice" INTEGER NOT NULL DEFAULT 0,
+  "wholesalePrice" INTEGER NOT NULL DEFAULT 0,
+  FOREIGN KEY ("budgetId") REFERENCES "Budget"("id") ON DELETE CASCADE,
+  FOREIGN KEY ("productId") REFERENCES "Product"("id"),
+  FOREIGN KEY ("productVariantId") REFERENCES "product_variants"("id") ON DELETE SET NULL
+);
+CREATE INDEX "BudgetItem_budgetId_idx" ON "BudgetItem"("budgetId");
+CREATE INDEX "BudgetItem_productVariantId_idx" ON "BudgetItem"("productVariantId");
+
+CREATE TABLE "OrderItem" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "orderId" TEXT NOT NULL,
+  "productId" INTEGER NOT NULL,
+  "productVariantId" INTEGER,
+  "price" INTEGER NOT NULL,
+  "retailPrice" INTEGER NOT NULL,
+  "wholesalePrice" INTEGER NOT NULL,
+  "quantity" INTEGER NOT NULL,
+  "amount" INTEGER NOT NULL,
+  "observation" TEXT,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE CASCADE,
+  FOREIGN KEY ("productId") REFERENCES "Product"("id"),
+  FOREIGN KEY ("productVariantId") REFERENCES "product_variants"("id") ON DELETE SET NULL
+);
+CREATE INDEX "OrderItem_orderId_idx" ON "OrderItem"("orderId");
+CREATE INDEX "OrderItem_productVariantId_idx" ON "OrderItem"("productVariantId");
+
+CREATE TABLE "ProductCategory" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "productId" INTEGER NOT NULL,
+  "categoryId" INTEGER NOT NULL,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE CASCADE,
+  FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE CASCADE,
+  UNIQUE("productId", "categoryId")
+);
+CREATE INDEX "ProductCategory_productId_idx" ON "ProductCategory"("productId");
+CREATE INDEX "ProductCategory_categoryId_idx" ON "ProductCategory"("categoryId");
+
+CREATE TABLE "ProductImage" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "productId" INTEGER NOT NULL,
+  "imageId" INTEGER NOT NULL,
+  "order_index" INTEGER NOT NULL DEFAULT 0,
+  "isPrimary" BOOLEAN NOT NULL DEFAULT 0,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE CASCADE,
+  FOREIGN KEY ("imageId") REFERENCES "Image"("id") ON DELETE CASCADE,
+  UNIQUE("productId", "imageId")
+);
+CREATE INDEX "ProductImage_productId_idx" ON "ProductImage"("productId");
+CREATE INDEX "ProductImage_imageId_idx" ON "ProductImage"("imageId");
+CREATE INDEX "ProductImage_productId_isPrimary_idx" ON "ProductImage"("productId", "isPrimary");
+
+CREATE TABLE "ProductRelated" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "productId" INTEGER NOT NULL,
+  "relatedProductId" INTEGER NOT NULL,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE CASCADE,
+  FOREIGN KEY ("relatedProductId") REFERENCES "Product"("id") ON DELETE CASCADE,
+  UNIQUE("productId", "relatedProductId")
+);
+
+CREATE TABLE "Responsible" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "name" TEXT NOT NULL,
+  "cuit" TEXT NOT NULL,
+  "condition" TEXT NOT NULL,
+  "observation" TEXT,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX "Responsible_cuit_key" ON "Responsible"("cuit");
+CREATE INDEX "Responsible_createdAt_idx" ON "Responsible"("createdAt");
+
+CREATE TABLE "Setting" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "key" TEXT NOT NULL,
+  "value" TEXT NOT NULL,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX "Setting_key_key" ON "Setting"("key");
+
+CREATE TABLE "User" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "name" TEXT NOT NULL,
+  "email" TEXT NOT NULL,
+  "password" TEXT NOT NULL,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+CREATE TABLE "backup_logs" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "status" TEXT NOT NULL,
+  "message" TEXT NOT NULL,
+  "triggered_by" TEXT NOT NULL
 );

@@ -3,6 +3,8 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody, ApiBea
 import { ProductsService } from './products.service';
 import { CreateProductDto, ProductImageDto } from './dto/create-product.dto';
 import { UpdateProductDto, UpdateProductPricesDto } from './dto/update-product.dto';
+import { CreateProductVariantDto } from './dto/create-product-variant.dto';
+import { UpdateProductVariantDto } from './dto/update-product-variant.dto';
 import { ProductEntity } from './entities/product.entity';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -181,5 +183,53 @@ export class ProductsController {
   @ApiResponse({ status: 404, description: 'Relación no encontrada' })
   removeRelatedProduct(@Param('id', ParseIntPipe) id: number, @Param('relatedId', ParseIntPipe) relatedId: number) {
     return this.productsService.removeRelatedProduct(id, relatedId);
+  }
+
+  // Endpoints para variantes del producto
+
+  @Get(':id/variants')
+  @ApiOperation({ summary: 'Listar variantes de un producto' })
+  @ApiParam({ name: 'id', description: 'ID del producto', type: Number })
+  @ApiResponse({ status: 200, description: 'Lista de variantes' })
+  @ApiResponse({ status: 404, description: 'Producto no encontrado' })
+  getVariants(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.getVariants(id);
+  }
+
+  @Post(':id/variants')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({ summary: 'Crear una variante del producto' })
+  @ApiParam({ name: 'id', description: 'ID del producto', type: Number })
+  @ApiResponse({ status: 201, description: 'Variante creada' })
+  @ApiResponse({ status: 404, description: 'Producto no encontrado' })
+  @ApiResponse({ status: 400, description: 'SKU duplicado o valores inválidos' })
+  createVariant(@Param('id', ParseIntPipe) id: number, @Body() dto: CreateProductVariantDto) {
+    return this.productsService.createVariant(id, dto);
+  }
+
+  @Put(':id/variants/:variantId')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({ summary: 'Actualizar una variante' })
+  @ApiParam({ name: 'id', description: 'ID del producto', type: Number })
+  @ApiParam({ name: 'variantId', description: 'ID de la variante', type: Number })
+  @ApiResponse({ status: 200, description: 'Variante actualizada' })
+  @ApiResponse({ status: 404, description: 'Variante no encontrada' })
+  updateVariant(@Param('id', ParseIntPipe) id: number, @Param('variantId', ParseIntPipe) variantId: number, @Body() dto: UpdateProductVariantDto) {
+    return this.productsService.updateVariant(id, variantId, dto);
+  }
+
+  @Delete(':id/variants/:variantId')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({ summary: 'Eliminar una variante' })
+  @ApiParam({ name: 'id', description: 'ID del producto', type: Number })
+  @ApiParam({ name: 'variantId', description: 'ID de la variante', type: Number })
+  @ApiResponse({ status: 200, description: 'Variante eliminada' })
+  @ApiResponse({ status: 404, description: 'Variante no encontrada' })
+  @ApiResponse({ status: 400, description: 'No se puede eliminar la única variante' })
+  removeVariant(@Param('id', ParseIntPipe) id: number, @Param('variantId', ParseIntPipe) variantId: number) {
+    return this.productsService.removeVariant(id, variantId);
   }
 }

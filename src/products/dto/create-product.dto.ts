@@ -96,6 +96,15 @@ export class CreateProductDto {
   })
   relatedProductIds?: number[];
 
+  @IsArray()
+  @IsInt({ each: true })
+  @IsOptional()
+  @ApiPropertyOptional({
+    description: 'IDs de tipos de variación que usa este producto (ej. color, medida)',
+    type: [Number],
+  })
+  variationTypeIds?: number[];
+
   @IsString()
   @IsOptional()
   @ApiPropertyOptional({ description: 'Información de actualización de precio' })

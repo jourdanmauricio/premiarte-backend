@@ -35,21 +35,24 @@ model Budget {
 }
 
 model BudgetItem {
-  id             Int      @id @default(autoincrement())
-  budgetId       String
-  productId      Int
-  price          Int
-  quantity       Int
-  amount         Int
-  observation    String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @default(now()) @updatedAt
-  retailPrice    Int      @default(0)
-  wholesalePrice Int      @default(0)
-  budget         Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
-  product        Product  @relation(fields: [productId], references: [id])
+  id                Int           @id @default(autoincrement())
+  budgetId          String
+  productId         Int
+  productVariantId  Int?
+  price             Int
+  quantity          Int
+  amount            Int
+  observation       String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @default(now()) @updatedAt
+  retailPrice       Int           @default(0)
+  wholesalePrice    Int           @default(0)
+  budget            Budget        @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  product           Product       @relation(fields: [productId], references: [id])
+  productVariant   ProductVariant? @relation(fields: [productVariantId], references: [id])
 
   @@index([budgetId])
+  @@index([productVariantId])
 }
 
 model Category {
@@ -132,45 +135,109 @@ model Order {
 }
 
 model OrderItem {
-  id             Int      @id @default(autoincrement())
-  orderId        String
-  productId      Int
-  price          Int
-  retailPrice    Int
-  wholesalePrice Int
-  quantity       Int
-  amount         Int
-  observation    String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @default(now()) @updatedAt
-  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product        Product  @relation(fields: [productId], references: [id])
+  id                Int             @id @default(autoincrement())
+  orderId           String
+  productId         Int
+  productVariantId  Int?
+  price             Int
+  retailPrice       Int
+  wholesalePrice    Int
+  quantity          Int
+  amount            Int
+  observation       String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @default(now()) @updatedAt
+  order             Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product           Product         @relation(fields: [productId], references: [id])
+  productVariant    ProductVariant? @relation(fields: [productVariantId], references: [id])
 
   @@index([orderId])
+  @@index([productVariantId])
 }
 
 model Product {
-  id             Int               @id @default(autoincrement())
-  name           String
-  description    String
+  id                   Int                    @id @default(autoincrement())
+  name                 String
+  description          String
+  stock                Int
+  isActive             Boolean                @default(true)
+  isFeatured           Boolean                @default(false)
+  retailPrice          Int
+  wholesalePrice       Int
+  slug                 String                 @unique
+  categoryId           Int?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @default(now()) @updatedAt
+  sku                  String?                @unique
+  priceUpdatedAt       DateTime?
+  priceUpdated         String?
+  budgetItems          BudgetItem[]
+  orderItems           OrderItem[]
+  categories           ProductCategory[]
+  images               ProductImage[]
+  relatedFrom          ProductRelated[]       @relation("ProductRelatedFrom")
+  relatedTo            ProductRelated[]       @relation("ProductRelatedTo")
+  variants             ProductVariant[]
+  variationTypes       ProductVariationType[]
+}
+
+model VariationType {
+  id        Int                    @id @default(autoincrement())
+  name      String
+  values    VariationTypeValue[]
+  products  ProductVariationType[]
+
+  @@map("variation_types")
+}
+
+model VariationTypeValue {
+  id               Int                   @id @default(autoincrement())
+  variationTypeId  Int                   @map("variation_type_id")
+  value            String
+  variationType    VariationType         @relation(fields: [variationTypeId], references: [id], onDelete: Cascade)
+  variantValues    ProductVariantValue[]
+
+  @@index([variationTypeId])
+  @@map("variation_type_values")
+}
+
+model ProductVariationType {
+  productId        Int
+  variationTypeId  Int                   @map("variation_type_id")
+  product          Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variationType    VariationType         @relation(fields: [variationTypeId], references: [id], onDelete: Cascade)
+
+  @@id([productId, variationTypeId])
+  @@index([variationTypeId])
+  @@map("product_variation_types")
+}
+
+model ProductVariant {
+  id             Int                   @id @default(autoincrement())
+  productId      Int                   @map("product_id")
+  sku            String                @unique
   stock          Int
-  isActive       Boolean           @default(true)
-  isFeatured     Boolean           @default(false)
-  retailPrice    Int
-  wholesalePrice Int
-  slug           String            @unique
-  categoryId     Int?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @default(now()) @updatedAt
-  sku            String?           @unique
-  priceUpdatedAt DateTime?
-  priceUpdated   String?
+  retailPrice    Int                   @map("retail_price")
+  wholesalePrice Int                   @map("wholesale_price")
+  isDefault      Boolean               @default(false) @map("is_default")
+  product        Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
+  values         ProductVariantValue[]
   budgetItems    BudgetItem[]
   orderItems     OrderItem[]
-  categories     ProductCategory[]
-  images         ProductImage[]
-  relatedFrom    ProductRelated[]  @relation("ProductRelatedFrom")
-  relatedTo      ProductRelated[]  @relation("ProductRelatedTo")
+
+  @@index([productId])
+  @@map("product_variants")
+}
+
+model ProductVariantValue {
+  variantId             Int
+  variationTypeValueId  Int                   @map("variation_type_value_id")
+  variant               ProductVariant         @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  variationTypeValue    VariationTypeValue     @relation(fields: [variationTypeValueId], references: [id], onDelete: Cascade)
+
+  @@id([variantId, variationTypeValueId])
+  @@index([variationTypeValueId])
+  @@map("product_variant_values")
 }
 
 model ProductCategory {

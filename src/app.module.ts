@@ -8,6 +8,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { AuthModule } from './auth/auth.module';
 import { ImagesModule } from './images/images.module';
 import { ProductsModule } from './products/products.module';
+import { VariationTypesModule } from './variation-types/variation-types.module';
 import { SettingsModule } from './settings/settings.module';
 import { SubscribeModule } from './subscribe/subscribe.module';
 import { BudgetsModule } from './budgets/budgets.module';
@@ -55,6 +56,7 @@ import { BackupModule } from './backup/backup.module';
     AuthModule,
     ImagesModule,
     ProductsModule,
+    VariationTypesModule,
     SettingsModule,
     SubscribeModule,
     BudgetsModule,

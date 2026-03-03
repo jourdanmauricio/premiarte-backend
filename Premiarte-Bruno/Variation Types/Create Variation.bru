@@ -1,0 +1,27 @@
+meta {
+  name: Create Variation
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{url}}/variation-types
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Colores",
+    "values": [{"value": "Rojo"}, {"value": "Azul"}]
+  }
+}
+
+script:pre-request {
+  req.setHeader("Authorization", "Bearer {{access_token}}");
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
