@@ -3,14 +3,63 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto, UpdateProductPricesDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 
+interface VariantItem {
+  sku?: string;
+  stock?: number;
+  retailPrice?: number;
+  wholesalePrice?: number;
+  isDefault?: boolean;
+  attributes?: Record<string, string>;
+}
+
 @Injectable()
 export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createProductDto: CreateProductDto) {
-    const { categoryIds, images, relatedProductIds, variationTypeIds, ...productData } = createProductDto;
+  private parseVariants(raw: unknown): VariantItem[] {
+    if (!raw || !Array.isArray(raw)) return [];
+    return raw as VariantItem[];
+  }
 
-    // Verificar que el slug no exista
+  private withVariantTotals<T extends { variants?: unknown; stock: number; retailPrice: number; wholesalePrice: number }>(
+    product: T,
+  ): T & {
+    totalStock: number;
+    minRetailPrice: number;
+    maxRetailPrice: number;
+    minWholesalePrice: number;
+    maxWholesalePrice: number;
+  } {
+    const variants = this.parseVariants(product.variants);
+
+    if (variants.length === 0) {
+      return {
+        ...product,
+        totalStock: product.stock,
+        minRetailPrice: product.retailPrice,
+        maxRetailPrice: product.retailPrice,
+        minWholesalePrice: product.wholesalePrice,
+        maxWholesalePrice: product.wholesalePrice,
+      };
+    }
+
+    const totalStock = variants.reduce((s, v) => s + (v.stock ?? 0), 0);
+    const retailPrices = variants.map((v) => v.retailPrice).filter((p): p is number => p != null);
+    const wholesalePrices = variants.map((v) => v.wholesalePrice).filter((p): p is number => p != null);
+
+    return {
+      ...product,
+      totalStock,
+      minRetailPrice: retailPrices.length ? Math.min(...retailPrices) : product.retailPrice,
+      maxRetailPrice: retailPrices.length ? Math.max(...retailPrices) : product.retailPrice,
+      minWholesalePrice: wholesalePrices.length ? Math.min(...wholesalePrices) : product.wholesalePrice,
+      maxWholesalePrice: wholesalePrices.length ? Math.max(...wholesalePrices) : product.wholesalePrice,
+    };
+  }
+
+  async create(createProductDto: CreateProductDto) {
+    const { categoryIds, images, relatedProductIds, variants, ...productData } = createProductDto;
+
     const existingProduct = await this.prisma.client.product.findUnique({
       where: { slug: productData.slug },
     });
@@ -19,7 +68,6 @@ export class ProductsService {
       throw new BadRequestException('Ya existe un producto con este slug');
     }
 
-    // Verificar SKU único si se proporciona
     if (productData.sku) {
       const existingSku = await this.prisma.client.product.findUnique({
         where: { sku: productData.sku },
@@ -30,7 +78,6 @@ export class ProductsService {
       }
     }
 
-    // Verificar que las categorías existen
     if (categoryIds && categoryIds.length > 0) {
       const categories = await this.prisma.client.category.findMany({
         where: { id: { in: categoryIds } },
@@ -41,7 +88,6 @@ export class ProductsService {
       }
     }
 
-    // Verificar que las imágenes existen
     if (images && images.length > 0) {
       const existingImages = await this.prisma.client.image.findMany({
         where: { id: { in: images } },
@@ -52,7 +98,6 @@ export class ProductsService {
       }
     }
 
-    // Verificar que los productos relacionados existen
     if (relatedProductIds && relatedProductIds.length > 0) {
       const relatedProducts = await this.prisma.client.product.findMany({
         where: { id: { in: relatedProductIds } },
@@ -63,73 +108,14 @@ export class ProductsService {
       }
     }
 
-    // Verificar que los tipos de variación existen
-    if (variationTypeIds && variationTypeIds.length > 0) {
-      const types = await this.prisma.client.variationType.findMany({
-        where: { id: { in: variationTypeIds } },
-      });
-      if (types.length !== variationTypeIds.length) {
-        throw new BadRequestException('Uno o más tipos de variación no existen');
-      }
-    }
-
-    // Crear el producto con sus relaciones y variante default
-    const product = await this.prisma.client.$transaction(async (tx) => {
-      const created = await tx.product.create({
-        data: {
-          ...productData,
-          categories:
-            categoryIds && categoryIds.length > 0
-              ? {
-                  create: categoryIds.map((categoryId) => ({
-                    categoryId,
-                  })),
-                }
-              : undefined,
-          images:
-            images && images.length > 0
-              ? {
-                  create: images.map((imageId, index) => ({
-                    imageId,
-                    orderIndex: index,
-                    isPrimary: index === 0,
-                  })),
-                }
-              : undefined,
-          relatedFrom:
-            relatedProductIds && relatedProductIds.length > 0
-              ? {
-                  create: relatedProductIds.map((relatedProductId) => ({
-                    relatedProductId,
-                  })),
-                }
-              : undefined,
-        },
-      });
-
-      // Todo producto tiene al menos una variante default
-      const variantSku = productData.sku ?? `P-${created.id}`;
-      await tx.productVariant.create({
-        data: {
-          productId: created.id,
-          sku: variantSku,
-          stock: created.stock,
-          retailPrice: created.retailPrice,
-          wholesalePrice: created.wholesalePrice,
-          isDefault: true,
-        },
-      });
-
-      if (variationTypeIds && variationTypeIds.length > 0) {
-        await tx.productVariationType.createMany({
-          data: variationTypeIds.map((variationTypeId) => ({
-            productId: created.id,
-            variationTypeId,
-          })),
-        });
-      }
-
-      return created;
+    const product = await this.prisma.client.product.create({
+      data: {
+        ...productData,
+        variants: variants ? (variants as unknown as import('@prisma/client').Prisma.InputJsonValue) : undefined,
+        categories: categoryIds && categoryIds.length > 0 ? { create: categoryIds.map((categoryId) => ({ categoryId })) } : undefined,
+        images: images && images.length > 0 ? { create: images.map((imageId, index) => ({ imageId, orderIndex: index, isPrimary: index === 0 })) } : undefined,
+        relatedFrom: relatedProductIds && relatedProductIds.length > 0 ? { create: relatedProductIds.map((relatedProductId) => ({ relatedProductId })) } : undefined,
+      },
     });
 
     return this.findOne(product.id);
@@ -157,6 +143,7 @@ export class ProductsService {
       sku: true,
       priceUpdatedAt: true,
       priceUpdated: true,
+      variants: true,
       categories: {
         select: {
           category: {
@@ -188,33 +175,6 @@ export class ProductsService {
       relatedFrom: {
         select: { relatedProductId: true },
       },
-      variants: {
-        select: {
-          id: true,
-          sku: true,
-          stock: true,
-          retailPrice: true,
-          wholesalePrice: true,
-          isDefault: true,
-          values: {
-            select: {
-              variationTypeValue: {
-                select: {
-                  id: true,
-                  value: true,
-                  variationType: { select: { id: true, name: true } },
-                },
-              },
-            },
-          },
-        },
-        orderBy: { isDefault: 'desc' as const },
-      },
-      variationTypes: {
-        select: {
-          variationType: { select: { id: true, name: true } },
-        },
-      },
     };
 
     const isPaginated = options?.page !== undefined && options?.page !== '';
@@ -234,13 +194,7 @@ export class ProductsService {
         }),
       );
       const total = data.length;
-      return {
-        data,
-        total,
-        page: 1,
-        limit: total,
-        totalPages: 1,
-      };
+      return { data, total, page: 1, limit: total, totalPages: 1 };
     }
 
     const page = parseInt(options.page!, 10);
@@ -282,9 +236,7 @@ export class ProductsService {
       include: {
         categories: {
           include: {
-            category: {
-              include: { image: true },
-            },
+            category: { include: { image: true } },
           },
         },
         images: {
@@ -304,21 +256,6 @@ export class ProductsService {
             },
           },
         },
-        variants: {
-          include: {
-            values: {
-              include: {
-                variationTypeValue: {
-                  include: { variationType: true },
-                },
-              },
-            },
-          },
-          orderBy: { isDefault: 'desc' },
-        },
-        variationTypes: {
-          include: { variationType: true },
-        },
       },
     });
 
@@ -335,9 +272,7 @@ export class ProductsService {
       include: {
         categories: {
           include: {
-            category: {
-              include: { image: true },
-            },
+            category: { include: { image: true } },
           },
         },
         images: {
@@ -357,21 +292,6 @@ export class ProductsService {
             },
           },
         },
-        variants: {
-          include: {
-            values: {
-              include: {
-                variationTypeValue: {
-                  include: { variationType: true },
-                },
-              },
-            },
-          },
-          orderBy: { isDefault: 'desc' },
-        },
-        variationTypes: {
-          include: { variationType: true },
-        },
       },
     });
 
@@ -388,18 +308,13 @@ export class ProductsService {
   }
 
   async update(id: number, updateProductDto: UpdateProductDto) {
-    // Verificar que el producto existe
     await this.findOne(id);
 
-    const { categoryIds, images, relatedProductIds, variationTypeIds, ...productData } = updateProductDto;
+    const { categoryIds, images, relatedProductIds, variants, ...productData } = updateProductDto;
 
-    // Verificar slug único si se actualiza
     if (productData.slug) {
       const existingProduct = await this.prisma.client.product.findFirst({
-        where: {
-          slug: productData.slug,
-          id: { not: id },
-        },
+        where: { slug: productData.slug, id: { not: id } },
       });
 
       if (existingProduct) {
@@ -407,13 +322,9 @@ export class ProductsService {
       }
     }
 
-    // Verificar SKU único si se actualiza
     if (productData.sku) {
       const existingSku = await this.prisma.client.product.findFirst({
-        where: {
-          sku: productData.sku,
-          id: { not: id },
-        },
+        where: { sku: productData.sku, id: { not: id } },
       });
 
       if (existingSku) {
@@ -421,98 +332,62 @@ export class ProductsService {
       }
     }
 
-    // Verificar categorías
-    if (categoryIds !== undefined) {
-      if (categoryIds.length > 0) {
-        const categories = await this.prisma.client.category.findMany({
-          where: { id: { in: categoryIds } },
-        });
-
-        if (categories.length !== categoryIds.length) {
-          throw new BadRequestException('Una o más categorías no existen');
-        }
-      }
-    }
-
-    // Verificar imágenes
-    if (images !== undefined) {
-      if (images.length > 0) {
-        const existingImages = await this.prisma.client.image.findMany({
-          where: { id: { in: images } },
-        });
-
-        if (existingImages.length !== images.length) {
-          throw new BadRequestException('Una o más imágenes no existen');
-        }
-      }
-    }
-
-    // Verificar productos relacionados
-    if (relatedProductIds !== undefined) {
-      if (relatedProductIds.length > 0) {
-        // No puede relacionarse consigo mismo
-        if (relatedProductIds.includes(id)) {
-          throw new BadRequestException('Un producto no puede estar relacionado consigo mismo');
-        }
-
-        const relatedProducts = await this.prisma.client.product.findMany({
-          where: { id: { in: relatedProductIds } },
-        });
-
-        if (relatedProducts.length !== relatedProductIds.length) {
-          throw new BadRequestException('Uno o más productos relacionados no existen');
-        }
-      }
-    }
-
-    // Verificar tipos de variación
-    if (variationTypeIds !== undefined && variationTypeIds.length > 0) {
-      const types = await this.prisma.client.variationType.findMany({
-        where: { id: { in: variationTypeIds } },
+    if (categoryIds !== undefined && categoryIds.length > 0) {
+      const categories = await this.prisma.client.category.findMany({
+        where: { id: { in: categoryIds } },
       });
-      if (types.length !== variationTypeIds.length) {
-        throw new BadRequestException('Uno o más tipos de variación no existen');
+
+      if (categories.length !== categoryIds.length) {
+        throw new BadRequestException('Una o más categorías no existen');
       }
     }
 
-    // Actualizar el producto usando una transacción
+    if (images !== undefined && images.length > 0) {
+      const existingImages = await this.prisma.client.image.findMany({
+        where: { id: { in: images } },
+      });
+
+      if (existingImages.length !== images.length) {
+        throw new BadRequestException('Una o más imágenes no existen');
+      }
+    }
+
+    if (relatedProductIds !== undefined && relatedProductIds.length > 0) {
+      if (relatedProductIds.includes(id)) {
+        throw new BadRequestException('Un producto no puede estar relacionado consigo mismo');
+      }
+
+      const relatedProducts = await this.prisma.client.product.findMany({
+        where: { id: { in: relatedProductIds } },
+      });
+
+      if (relatedProducts.length !== relatedProductIds.length) {
+        throw new BadRequestException('Uno o más productos relacionados no existen');
+      }
+    }
+
     return this.prisma.client
       .$transaction(async (tx) => {
-        // Actualizar datos básicos del producto
         await tx.product.update({
           where: { id },
           data: {
             ...productData,
+            variants: variants !== undefined ? (variants as unknown as import('@prisma/client').Prisma.InputJsonValue) : undefined,
             priceUpdatedAt: productData.retailPrice !== undefined || productData.wholesalePrice !== undefined ? new Date() : undefined,
           },
         });
 
-        // Actualizar categorías si se proporcionan
         if (categoryIds !== undefined) {
-          // Eliminar relaciones existentes
-          await tx.productCategory.deleteMany({
-            where: { productId: id },
-          });
-
-          // Crear nuevas relaciones
+          await tx.productCategory.deleteMany({ where: { productId: id } });
           if (categoryIds.length > 0) {
             await tx.productCategory.createMany({
-              data: categoryIds.map((categoryId) => ({
-                productId: id,
-                categoryId,
-              })),
+              data: categoryIds.map((categoryId) => ({ productId: id, categoryId })),
             });
           }
         }
 
-        // Actualizar imágenes si se proporcionan
         if (images !== undefined) {
-          // Eliminar relaciones existentes
-          await tx.productImage.deleteMany({
-            where: { productId: id },
-          });
-
-          // Crear nuevas relaciones (la primera imagen es la principal)
+          await tx.productImage.deleteMany({ where: { productId: id } });
           if (images.length > 0) {
             await tx.productImage.createMany({
               data: images.map((imageId, index) => ({
@@ -525,68 +400,21 @@ export class ProductsService {
           }
         }
 
-        // Actualizar productos relacionados si se proporcionan
         if (relatedProductIds !== undefined) {
-          // Eliminar relaciones existentes
-          await tx.productRelated.deleteMany({
-            where: { productId: id },
-          });
-
-          // Crear nuevas relaciones
+          await tx.productRelated.deleteMany({ where: { productId: id } });
           if (relatedProductIds.length > 0) {
             await tx.productRelated.createMany({
-              data: relatedProductIds.map((relatedProductId) => ({
-                productId: id,
-                relatedProductId,
-              })),
+              data: relatedProductIds.map((relatedProductId) => ({ productId: id, relatedProductId })),
             });
           }
         }
 
-        // Actualizar tipos de variación si se proporcionan
-        if (variationTypeIds !== undefined) {
-          await tx.productVariationType.deleteMany({
-            where: { productId: id },
-          });
-          if (variationTypeIds.length > 0) {
-            await tx.productVariationType.createMany({
-              data: variationTypeIds.map((variationTypeId) => ({
-                productId: id,
-                variationTypeId,
-              })),
-            });
-          }
-        }
-
-        // Retornar el producto actualizado con todas sus relaciones
         const updated = await tx.product.findUnique({
           where: { id },
           include: {
-            categories: {
-              include: { category: true },
-            },
-            images: {
-              include: { image: true },
-              orderBy: { orderIndex: 'asc' },
-            },
-            relatedFrom: {
-              include: { relatedProduct: true },
-            },
-            variants: {
-              include: {
-                values: {
-                  include: {
-                    variationTypeValue: {
-                      include: { variationType: true },
-                    },
-                  },
-                },
-              },
-              orderBy: { isDefault: 'desc' },
-            },
-            variationTypes: {
-              include: { variationType: true },
-            },
+            categories: { include: { category: true } },
+            images: { include: { image: true }, orderBy: { orderIndex: 'asc' } },
+            relatedFrom: { include: { relatedProduct: true } },
           },
         });
         return updated!;
@@ -623,39 +451,29 @@ export class ProductsService {
 
   async remove(id: number) {
     await this.findOne(id);
-
-    return this.prisma.client.product.delete({
-      where: { id },
-    });
+    return this.prisma.client.product.delete({ where: { id } });
   }
 
-  // Métodos adicionales para gestión de relaciones
+  // Gestión de categorías
 
   async addCategory(productId: number, categoryId: number) {
     const product = await this.findOne(productId);
 
-    const category = await this.prisma.client.category.findUnique({
-      where: { id: categoryId },
-    });
+    const category = await this.prisma.client.category.findUnique({ where: { id: categoryId } });
 
     if (!category) {
       throw new NotFoundException('Categoría no encontrada');
     }
 
-    // Verificar si ya existe la relación
     const existing = await this.prisma.client.productCategory.findUnique({
-      where: {
-        productId_categoryId: { productId, categoryId },
-      },
+      where: { productId_categoryId: { productId, categoryId } },
     });
 
     if (existing) {
       throw new BadRequestException('El producto ya tiene esta categoría asignada');
     }
 
-    await this.prisma.client.productCategory.create({
-      data: { productId, categoryId },
-    });
+    await this.prisma.client.productCategory.create({ data: { productId, categoryId } });
 
     return this.findOne(product.id);
   }
@@ -664,45 +482,37 @@ export class ProductsService {
     await this.findOne(productId);
 
     const relation = await this.prisma.client.productCategory.findUnique({
-      where: {
-        productId_categoryId: { productId, categoryId },
-      },
+      where: { productId_categoryId: { productId, categoryId } },
     });
 
     if (!relation) {
       throw new NotFoundException('El producto no tiene esta categoría asignada');
     }
 
-    await this.prisma.client.productCategory.delete({
-      where: { id: relation.id },
-    });
+    await this.prisma.client.productCategory.delete({ where: { id: relation.id } });
 
     return this.findOne(productId);
   }
 
+  // Gestión de imágenes
+
   async addImage(productId: number, imageId: number, orderIndex = 0, isPrimary = false) {
     const product = await this.findOne(productId);
 
-    const image = await this.prisma.client.image.findUnique({
-      where: { id: imageId },
-    });
+    const image = await this.prisma.client.image.findUnique({ where: { id: imageId } });
 
     if (!image) {
       throw new NotFoundException('Imagen no encontrada');
     }
 
-    // Verificar si ya existe la relación
     const existing = await this.prisma.client.productImage.findUnique({
-      where: {
-        productId_imageId: { productId, imageId },
-      },
+      where: { productId_imageId: { productId, imageId } },
     });
 
     if (existing) {
       throw new BadRequestException('El producto ya tiene esta imagen asignada');
     }
 
-    // Si es la imagen principal, quitar el flag de las demás
     if (isPrimary) {
       await this.prisma.client.productImage.updateMany({
         where: { productId, isPrimary: true },
@@ -710,9 +520,7 @@ export class ProductsService {
       });
     }
 
-    await this.prisma.client.productImage.create({
-      data: { productId, imageId, orderIndex, isPrimary },
-    });
+    await this.prisma.client.productImage.create({ data: { productId, imageId, orderIndex, isPrimary } });
 
     return this.findOne(product.id);
   }
@@ -721,18 +529,14 @@ export class ProductsService {
     await this.findOne(productId);
 
     const relation = await this.prisma.client.productImage.findUnique({
-      where: {
-        productId_imageId: { productId, imageId },
-      },
+      where: { productId_imageId: { productId, imageId } },
     });
 
     if (!relation) {
       throw new NotFoundException('El producto no tiene esta imagen asignada');
     }
 
-    await this.prisma.client.productImage.delete({
-      where: { id: relation.id },
-    });
+    await this.prisma.client.productImage.delete({ where: { id: relation.id } });
 
     return this.findOne(productId);
   }
@@ -741,22 +545,18 @@ export class ProductsService {
     await this.findOne(productId);
 
     const relation = await this.prisma.client.productImage.findUnique({
-      where: {
-        productId_imageId: { productId, imageId },
-      },
+      where: { productId_imageId: { productId, imageId } },
     });
 
     if (!relation) {
       throw new NotFoundException('El producto no tiene esta imagen asignada');
     }
 
-    // Quitar el flag de todas las imágenes del producto
     await this.prisma.client.productImage.updateMany({
       where: { productId, isPrimary: true },
       data: { isPrimary: false },
     });
 
-    // Establecer la nueva imagen principal
     await this.prisma.client.productImage.update({
       where: { id: relation.id },
       data: { isPrimary: true },
@@ -765,6 +565,8 @@ export class ProductsService {
     return this.findOne(productId);
   }
 
+  // Gestión de productos relacionados
+
   async addRelatedProduct(productId: number, relatedProductId: number) {
     if (productId === relatedProductId) {
       throw new BadRequestException('Un producto no puede estar relacionado consigo mismo');
@@ -772,28 +574,21 @@ export class ProductsService {
 
     await this.findOne(productId);
 
-    const relatedProduct = await this.prisma.client.product.findUnique({
-      where: { id: relatedProductId },
-    });
+    const relatedProduct = await this.prisma.client.product.findUnique({ where: { id: relatedProductId } });
 
     if (!relatedProduct) {
       throw new NotFoundException('El producto relacionado no existe');
     }
 
-    // Verificar si ya existe la relación
     const existing = await this.prisma.client.productRelated.findUnique({
-      where: {
-        productId_relatedProductId: { productId, relatedProductId },
-      },
+      where: { productId_relatedProductId: { productId, relatedProductId } },
     });
 
     if (existing) {
       throw new BadRequestException('El producto ya está relacionado');
     }
 
-    await this.prisma.client.productRelated.create({
-      data: { productId, relatedProductId },
-    });
+    await this.prisma.client.productRelated.create({ data: { productId, relatedProductId } });
 
     return this.findOne(productId);
   }
@@ -802,224 +597,15 @@ export class ProductsService {
     await this.findOne(productId);
 
     const relation = await this.prisma.client.productRelated.findUnique({
-      where: {
-        productId_relatedProductId: { productId, relatedProductId },
-      },
+      where: { productId_relatedProductId: { productId, relatedProductId } },
     });
 
     if (!relation) {
       throw new NotFoundException('El producto no está relacionado');
     }
 
-    await this.prisma.client.productRelated.delete({
-      where: { id: relation.id },
-    });
+    await this.prisma.client.productRelated.delete({ where: { id: relation.id } });
 
     return this.findOne(productId);
-  }
-
-  // --- Variantes ---
-
-  private withVariantTotals<T extends { variants?: { stock: number; retailPrice: number; wholesalePrice: number }[] }>(product: T): T & { totalStock: number; minRetailPrice?: number; maxRetailPrice?: number; minWholesalePrice?: number; maxWholesalePrice?: number } {
-    const variants = product.variants ?? [];
-    const totalStock = variants.reduce((s, v) => s + v.stock, 0);
-    const retailPrices = variants.map((v) => v.retailPrice).filter((p) => p != null);
-    const wholesalePrices = variants.map((v) => v.wholesalePrice).filter((p) => p != null);
-    return {
-      ...product,
-      totalStock,
-      minRetailPrice: retailPrices.length ? Math.min(...retailPrices) : undefined,
-      maxRetailPrice: retailPrices.length ? Math.max(...retailPrices) : undefined,
-      minWholesalePrice: wholesalePrices.length ? Math.min(...wholesalePrices) : undefined,
-      maxWholesalePrice: wholesalePrices.length ? Math.max(...wholesalePrices) : undefined,
-    };
-  }
-
-  async getVariants(productId: number) {
-    await this.findOne(productId);
-    return this.prisma.client.productVariant.findMany({
-      where: { productId },
-      include: {
-        values: {
-          include: {
-            variationTypeValue: {
-              include: { variationType: true },
-            },
-          },
-        },
-      },
-      orderBy: [{ isDefault: 'desc' }, { id: 'asc' }],
-    });
-  }
-
-  async createVariant(productId: number, dto: { sku: string; stock: number; retailPrice: number; wholesalePrice: number; isDefault?: boolean; variationTypeValueIds?: number[] }) {
-    const product = await this.prisma.client.product.findUnique({
-      where: { id: productId },
-      include: { variationTypes: true, variants: true },
-    });
-    if (!product) {
-      throw new NotFoundException('Producto no encontrado');
-    }
-    const existingSku = await this.prisma.client.productVariant.findUnique({
-      where: { sku: dto.sku },
-    });
-    if (existingSku) {
-      throw new BadRequestException('Ya existe una variante con este SKU');
-    }
-    if (dto.variationTypeValueIds?.length) {
-      const typeIds = product.variationTypes.map((pt) => pt.variationTypeId);
-      const values = await this.prisma.client.variationTypeValue.findMany({
-        where: { id: { in: dto.variationTypeValueIds } },
-      });
-      for (const v of values) {
-        if (!typeIds.includes(v.variationTypeId)) {
-          throw new BadRequestException(`El valor ${v.value} no pertenece a un tipo de variación de este producto`);
-        }
-      }
-      if (values.length !== dto.variationTypeValueIds.length) {
-        throw new BadRequestException('Uno o más IDs de valor de variación no existen');
-      }
-    }
-    const variant = await this.prisma.client.productVariant.create({
-      data: {
-        productId,
-        sku: dto.sku,
-        stock: dto.stock,
-        retailPrice: dto.retailPrice,
-        wholesalePrice: dto.wholesalePrice,
-        isDefault: dto.isDefault ?? false,
-      },
-    });
-    if (dto.isDefault && product.variants.length > 0) {
-      await this.prisma.client.productVariant.updateMany({
-        where: { productId },
-        data: { isDefault: false },
-      });
-      await this.prisma.client.productVariant.update({
-        where: { id: variant.id },
-        data: { isDefault: true },
-      });
-    }
-    if (dto.variationTypeValueIds?.length) {
-      await this.prisma.client.productVariantValue.createMany({
-        data: dto.variationTypeValueIds.map((variationTypeValueId) => ({
-          variantId: variant.id,
-          variationTypeValueId,
-        })),
-      });
-    }
-    return this.prisma.client.productVariant.findUnique({
-      where: { id: variant.id },
-      include: {
-        values: {
-          include: {
-            variationTypeValue: {
-              include: { variationType: true },
-            },
-          },
-        },
-      },
-    });
-  }
-
-  async updateVariant(productId: number, variantId: number, dto: { sku?: string; stock?: number; retailPrice?: number; wholesalePrice?: number; isDefault?: boolean; variationTypeValueIds?: number[] }) {
-    const variant = await this.prisma.client.productVariant.findFirst({
-      where: { id: variantId, productId },
-      include: { product: { include: { variationTypes: true, variants: true } } },
-    });
-    if (!variant) {
-      throw new NotFoundException('Variante no encontrada');
-    }
-    if (dto.sku !== undefined) {
-      const existing = await this.prisma.client.productVariant.findFirst({
-        where: { sku: dto.sku, id: { not: variantId } },
-      });
-      if (existing) {
-        throw new BadRequestException('Ya existe otra variante con este SKU');
-      }
-    }
-    if (dto.isDefault === true) {
-      await this.prisma.client.productVariant.updateMany({
-        where: { productId },
-        data: { isDefault: false },
-      });
-    }
-    if (dto.variationTypeValueIds !== undefined) {
-      await this.prisma.client.productVariantValue.deleteMany({
-        where: { variantId },
-      });
-      if (dto.variationTypeValueIds.length > 0) {
-        const typeIds = variant.product.variationTypes.map((pt) => pt.variationTypeId);
-        const values = await this.prisma.client.variationTypeValue.findMany({
-          where: { id: { in: dto.variationTypeValueIds } },
-        });
-        for (const v of values) {
-          if (!typeIds.includes(v.variationTypeId)) {
-            throw new BadRequestException(`El valor no pertenece a un tipo de variación de este producto`);
-          }
-        }
-        await this.prisma.client.productVariantValue.createMany({
-          data: dto.variationTypeValueIds.map((variationTypeValueId) => ({
-            variantId,
-            variationTypeValueId,
-          })),
-        });
-      }
-    }
-    await this.prisma.client.productVariant.update({
-      where: { id: variantId },
-      data: {
-        ...(dto.sku !== undefined && { sku: dto.sku }),
-        ...(dto.stock !== undefined && { stock: dto.stock }),
-        ...(dto.retailPrice !== undefined && { retailPrice: dto.retailPrice }),
-        ...(dto.wholesalePrice !== undefined && { wholesalePrice: dto.wholesalePrice }),
-        ...(dto.isDefault !== undefined && { isDefault: dto.isDefault }),
-      },
-    });
-    return this.prisma.client.productVariant.findUnique({
-      where: { id: variantId },
-      include: {
-        values: {
-          include: {
-            variationTypeValue: {
-              include: { variationType: true },
-            },
-          },
-        },
-      },
-    });
-  }
-
-  async removeVariant(productId: number, variantId: number) {
-    const variant = await this.prisma.client.productVariant.findFirst({
-      where: { id: variantId, productId },
-    });
-    if (!variant) {
-      throw new NotFoundException('Variante no encontrada');
-    }
-    const count = await this.prisma.client.productVariant.count({
-      where: { productId },
-    });
-    if (count <= 1) {
-      throw new BadRequestException('No se puede eliminar la única variante del producto');
-    }
-    await this.prisma.client.productVariantValue.deleteMany({
-      where: { variantId },
-    });
-    await this.prisma.client.productVariant.delete({
-      where: { id: variantId },
-    });
-    if (variant.isDefault) {
-      const next = await this.prisma.client.productVariant.findFirst({
-        where: { productId },
-      });
-      if (next) {
-        await this.prisma.client.productVariant.update({
-          where: { id: next.id },
-          data: { isDefault: true },
-        });
-      }
-    }
-    return { deleted: true, id: variantId };
   }
 }

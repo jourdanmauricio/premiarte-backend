@@ -46,7 +46,7 @@ cat prisma/migrations/[timestamp]_nombre_descriptivo/migration.sql
 
 ```bash
 turso db shell premiarte-db < prisma/migrations/[timestamp]_nombre_descriptivo/migration.sql
-turso db shell premiarte-db < prisma/migrations/20260303090008_remove_slug_order_index_variation_types/migration.sql
+turso db shell premiarte-db < prisma/migrations/20260305000000_revert_variants_add_json/migration.sql
 ```
 
 ### 5. Verificar en Turso

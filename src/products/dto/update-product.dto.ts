@@ -4,21 +4,17 @@ import { IsArray, IsInt, IsString } from 'class-validator';
 
 export class UpdateProductDto extends PartialType(CreateProductDto) {}
 
-// products: number[];
-// percentage: number;
-// operation: "add" | "subtract";
-
 export class UpdateProductPricesDto {
   @IsArray()
   @IsInt({ each: true })
-  @ApiProperty({ description: 'ID del producto' })
+  @ApiProperty({ description: 'IDs de los productos a actualizar' })
   products: number[];
 
   @IsInt()
-  @ApiProperty({ description: 'Precio minorista en centavos' })
+  @ApiProperty({ description: 'Porcentaje de ajuste' })
   percentage: number;
 
   @IsString()
-  @ApiProperty({ description: 'Operación a realizar' })
+  @ApiProperty({ description: 'Operación a realizar', enum: ['add', 'subtract'] })
   operation: 'add' | 'subtract';
 }

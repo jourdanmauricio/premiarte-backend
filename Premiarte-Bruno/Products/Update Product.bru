@@ -5,36 +5,38 @@ meta {
 }
 
 put {
-  url: {{baseUrl}}/products/:id
+  url: {{url}}/products/316
   body: json
   auth: none
 }
 
-params:path {
-  id: 1
-}
-
 body:json {
   {
-    "name": "Producto actualizado",
-    "description": "Descripción actualizada",
-    "stock": 150,
-    "retailPrice": 18000,
-    "wholesalePrice": 14000,
-    "categoryIds": [1, 2],
-    "images": [
+  "isActive": true,
+  "variationTypeIds": [1],
+  "variants": [
       {
-        "imageId": 1,
-        "orderIndex": 0,
-        "isPrimary": true
+        "sku": "REM-AZUL",
+        "stock": 50,
+        "retailPrice": 2999,
+        "wholesalePrice": 2499,
+        "isDefault": true,
+        "variationTypeValueIds": [53]
       },
       {
-        "imageId": 2,
-        "orderIndex": 1,
-        "isPrimary": false
+        "sku": "REM-ROJO",
+        "stock": 50,
+        "retailPrice": 2999,
+        "wholesalePrice": 2499,
+        "isDefault": false,
+        "variationTypeValueIds": [54]
       }
     ]
   }
+}
+
+script:pre-request {
+  req.setHeader("Authorization", "Bearer {{access_token}}");
 }
 
 docs {

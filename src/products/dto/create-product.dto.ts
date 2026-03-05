@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsInt, IsBoolean, IsOptional, IsArray, Min, IsDate } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsString, IsInt, IsBoolean, IsOptional, IsArray, Min, IsDate, ValidateNested, IsObject } from 'class-validator';
 
 /**
  * DTO para agregar una imagen individual a un producto (usado en endpoint POST /products/:id/images)
@@ -19,6 +20,41 @@ export class ProductImageDto {
   @IsOptional()
   @ApiPropertyOptional({ description: 'Indica si es la imagen principal', default: false })
   isPrimary?: boolean;
+}
+
+export class ProductVariantDto {
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ description: 'SKU único de la variante' })
+  sku?: string;
+
+  @IsInt()
+  @Min(0)
+  @ApiProperty({ description: 'Stock de la variante' })
+  stock: number;
+
+  @IsInt()
+  @Min(0)
+  @ApiProperty({ description: 'Precio minorista de la variante en centavos' })
+  retailPrice: number;
+
+  @IsInt()
+  @Min(0)
+  @ApiProperty({ description: 'Precio mayorista de la variante en centavos' })
+  wholesalePrice: number;
+
+  @IsOptional()
+  @IsBoolean()
+  @ApiPropertyOptional({ description: 'Si es la variante por defecto', default: false })
+  isDefault?: boolean;
+
+  @IsOptional()
+  @IsObject()
+  @ApiPropertyOptional({
+    description: 'Atributos libres de la variante (ej. { "Color": "Azul", "Talle": "M" })',
+    example: { Color: 'Azul', Talle: 'M' },
+  })
+  attributes?: Record<string, string>;
 }
 
 export class CreateProductDto {
@@ -96,14 +132,15 @@ export class CreateProductDto {
   })
   relatedProductIds?: number[];
 
-  @IsArray()
-  @IsInt({ each: true })
   @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProductVariantDto)
   @ApiPropertyOptional({
-    description: 'IDs de tipos de variación que usa este producto (ej. color, medida)',
-    type: [Number],
+    description: 'Variantes del producto. Si se omite o es [], el producto usa sus propios campos de stock y precio.',
+    type: [ProductVariantDto],
   })
-  variationTypeIds?: number[];
+  variants?: ProductVariantDto[];
 
   @IsString()
   @IsOptional()

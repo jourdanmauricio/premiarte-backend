@@ -1,5 +1,6 @@
 -- Schema actual del proyecto (refleja Prisma + migraciones aplicadas).
--- Incluye variantes de productos, Budget/Order con UUID, Customer con email/phone opcionales, User y BackupLog.
+-- Budget/Order con UUID, Customer con email/phone opcionales, User y BackupLog.
+-- Variantes almacenadas como JSON en Product.variants.
 
 -- Customer (id UUID) debe existir antes de Budget y Order
 CREATE TABLE "Customer" (
@@ -120,64 +121,16 @@ CREATE TABLE "Product" (
   "sku" TEXT,
   "priceUpdatedAt" DATETIME,
   "priceUpdated" TEXT,
+  "variants" TEXT,
   FOREIGN KEY ("categoryId") REFERENCES "Category"("id")
 );
 CREATE UNIQUE INDEX "Product_slug_key" ON "Product"("slug");
 CREATE UNIQUE INDEX "Product_sku_key" ON "Product"("sku");
 
--- Tipos de variación (catálogo global)
-CREATE TABLE "variation_types" (
-  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  "name" TEXT NOT NULL
-);
-
-CREATE TABLE "variation_type_values" (
-  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  "variation_type_id" INTEGER NOT NULL,
-  "value" TEXT NOT NULL,
-  FOREIGN KEY ("variation_type_id") REFERENCES "variation_types"("id") ON DELETE CASCADE
-);
-CREATE INDEX "variation_type_values_variation_type_id_idx" ON "variation_type_values"("variation_type_id");
-
--- Producto usa qué tipos de variación
-CREATE TABLE "product_variation_types" (
-  "productId" INTEGER NOT NULL,
-  "variation_type_id" INTEGER NOT NULL,
-  PRIMARY KEY ("productId", "variation_type_id"),
-  FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE CASCADE,
-  FOREIGN KEY ("variation_type_id") REFERENCES "variation_types"("id") ON DELETE CASCADE
-);
-CREATE INDEX "product_variation_types_variation_type_id_idx" ON "product_variation_types"("variation_type_id");
-
--- Variantes de cada producto
-CREATE TABLE "product_variants" (
-  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  "product_id" INTEGER NOT NULL,
-  "sku" TEXT NOT NULL,
-  "stock" INTEGER NOT NULL,
-  "retail_price" INTEGER NOT NULL,
-  "wholesale_price" INTEGER NOT NULL,
-  "is_default" BOOLEAN NOT NULL DEFAULT 0,
-  FOREIGN KEY ("product_id") REFERENCES "Product"("id") ON DELETE CASCADE
-);
-CREATE UNIQUE INDEX "product_variants_sku_key" ON "product_variants"("sku");
-CREATE INDEX "product_variants_product_id_idx" ON "product_variants"("product_id");
-
--- Valores de cada variante (combinación variante + valor del catálogo)
-CREATE TABLE "product_variant_values" (
-  "variantId" INTEGER NOT NULL,
-  "variation_type_value_id" INTEGER NOT NULL,
-  PRIMARY KEY ("variantId", "variation_type_value_id"),
-  FOREIGN KEY ("variantId") REFERENCES "product_variants"("id") ON DELETE CASCADE,
-  FOREIGN KEY ("variation_type_value_id") REFERENCES "variation_type_values"("id") ON DELETE CASCADE
-);
-CREATE INDEX "product_variant_values_variation_type_value_id_idx" ON "product_variant_values"("variation_type_value_id");
-
 CREATE TABLE "BudgetItem" (
   "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   "budgetId" TEXT NOT NULL,
   "productId" INTEGER NOT NULL,
-  "productVariantId" INTEGER,
   "price" INTEGER NOT NULL,
   "quantity" INTEGER NOT NULL,
   "amount" INTEGER NOT NULL,
@@ -187,17 +140,14 @@ CREATE TABLE "BudgetItem" (
   "retailPrice" INTEGER NOT NULL DEFAULT 0,
   "wholesalePrice" INTEGER NOT NULL DEFAULT 0,
   FOREIGN KEY ("budgetId") REFERENCES "Budget"("id") ON DELETE CASCADE,
-  FOREIGN KEY ("productId") REFERENCES "Product"("id"),
-  FOREIGN KEY ("productVariantId") REFERENCES "product_variants"("id") ON DELETE SET NULL
+  FOREIGN KEY ("productId") REFERENCES "Product"("id")
 );
 CREATE INDEX "BudgetItem_budgetId_idx" ON "BudgetItem"("budgetId");
-CREATE INDEX "BudgetItem_productVariantId_idx" ON "BudgetItem"("productVariantId");
 
 CREATE TABLE "OrderItem" (
   "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   "orderId" TEXT NOT NULL,
   "productId" INTEGER NOT NULL,
-  "productVariantId" INTEGER,
   "price" INTEGER NOT NULL,
   "retailPrice" INTEGER NOT NULL,
   "wholesalePrice" INTEGER NOT NULL,
@@ -207,11 +157,9 @@ CREATE TABLE "OrderItem" (
   "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE CASCADE,
-  FOREIGN KEY ("productId") REFERENCES "Product"("id"),
-  FOREIGN KEY ("productVariantId") REFERENCES "product_variants"("id") ON DELETE SET NULL
+  FOREIGN KEY ("productId") REFERENCES "Product"("id")
 );
 CREATE INDEX "OrderItem_orderId_idx" ON "OrderItem"("orderId");
-CREATE INDEX "OrderItem_productVariantId_idx" ON "OrderItem"("productVariantId");
 
 CREATE TABLE "ProductCategory" (
   "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
