@@ -1,0 +1,203 @@
+[33mcommit c001f846843fc56c1109ad5f0a354e9a16379e39[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;32mvariantes[m[33m)[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Tue Mar 3 06:21:14 2026 -0300
+
+    Agrego variaciones y valores
+
+[33mcommit 7b84d9ac49acc0615964e718e524ae1588611f0c[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Tue Mar 3 03:36:46 2026 -0300
+
+    .
+
+[33mcommit c0208771e2ffba8d60660ebef0abe2811c779f9c[m[33m ([m[1;31morigin/main[m[33m)[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Mon Mar 2 08:01:11 2026 -0300
+
+    .
+
+[33mcommit 665b4b9d9303724f25280941a071352329de05a8[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Mon Mar 2 07:51:19 2026 -0300
+
+    .
+
+[33mcommit 31267008bebe1705427ebddc837619fbae7c81e5[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Mon Mar 2 07:40:34 2026 -0300
+
+    .
+
+[33mcommit 695fae64b3b93e3666b779190ea6a0df6b26be8c[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Mon Mar 2 07:37:27 2026 -0300
+
+    .
+
+[33mcommit 82bea4ee96e0f6292c757d38110c0c43ed3c215a[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Mon Mar 2 07:35:20 2026 -0300
+
+    .
+
+[33mcommit 09d51a0a0a0bae8d5eefa53a48a8c71c2c15cfb2[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Mon Mar 2 07:31:49 2026 -0300
+
+    .
+
+[33mcommit ce255f72e1623b0368b8d391ea6e0964e5127a25[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Mon Mar 2 07:29:23 2026 -0300
+
+    .
+
+[33mcommit 6e2782782363e6397de977e9170435ffc15c9ff1[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Mon Mar 2 07:21:26 2026 -0300
+
+    .
+
+[33mcommit f21e958021d15a650437af70924a6b84af5618d8[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Mon Mar 2 06:09:52 2026 -0300
+
+    Add backups (manual and cron week)
+
+[33mcommit a35016a3d66d52245ca46739071ba98cd682c84d[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Mon Mar 2 04:25:15 2026 -0300
+
+    Agrego plan para viriaciones de productos
+
+[33mcommit ef30ad35252f88ae37a2307e4f946936d824a73d[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Sat Feb 28 21:38:02 2026 -0300
+
+    .
+
+[33mcommit 66d30847768a3fb88c6736ee29f792b30754d7e6[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Sat Feb 28 21:15:24 2026 -0300
+
+    Add settings
+
+[33mcommit ae1d54fbb6fa5ac1494e799448df7d79fd233a8c[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Fri Feb 27 20:49:19 2026 -0300
+
+    Add cuit - PDF
+
+[33mcommit 59e16072f12018368ea48aa55f34ddaf6a5abdbe[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Fri Feb 27 19:47:51 2026 -0300
+
+    Fix create budget
+
+[33mcommit 0a8dfbaf4f0427d17074a36142597511314ca703[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Thu Feb 26 18:53:18 2026 -0300
+
+    Add Forgot pass
+
+[33mcommit 201d951448e588520361b53680185de327f37c65[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Thu Feb 26 16:51:58 2026 -0300
+
+    Add Guard
+
+[33mcommit 3d52860e234f0f934e875e0578aac994fb70750e[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Wed Feb 25 18:21:49 2026 -0300
+
+    Add mail service
+
+[33mcommit 3f021ba4c530f7beaf7d27e4348d7e736567d92b[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Wed Feb 25 17:38:18 2026 -0300
+
+    Add mail service
+
+[33mcommit 49d6cf0d604869bf1967837202e4a886cc6cfe44[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Mon Feb 23 19:05:33 2026 -0300
+
+    Add newsletter module
+
+[33mcommit 6a54482bd9e5bba28c9d33e47274d6b09dc345bc[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Mon Feb 23 17:28:16 2026 -0300
+
+    Add contact module
+
+[33mcommit 474c8e6393d91d291b3f4211d32d2ed0d3b1e270[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Sat Feb 21 20:37:46 2026 -0300
+
+    .
+
+[33mcommit 534c75930be41b7fd3d3c0aa4c552e7729629c51[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Sat Feb 21 20:21:50 2026 -0300
+
+    .
+
+[33mcommit 8e082ab39081fef86709d4c202e4958ee0a297c9[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Sat Feb 21 20:00:27 2026 -0300
+
+    .
+
+[33mcommit 3d558eab26a3d2d9ac259ac6289301df6f567222[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Sat Feb 21 19:39:32 2026 -0300
+
+    .
+
+[33mcommit 059ac66b0faed6d890eb7882ded06889c103af75[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Sat Feb 21 18:14:27 2026 -0300
+
+    .
+
+[33mcommit a34cb19741203ab6bbe9eef9e59d703d40b95caa[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Sat Feb 21 17:43:14 2026 -0300
+
+    Change deploy
+
+[33mcommit d320199bf2ad03a8d7be5ecb3510fa8c6561af2b[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Sat Feb 21 17:10:24 2026 -0300
+
+    Add Dockerfile - deploy
+
+[33mcommit 9086ad678749a527a41d0c08eb41857ef6da24bd[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Sat Feb 21 16:46:28 2026 -0300
+
+    Add Readme
+
+[33mcommit 0358bf5c56ee11f988f83e6b5fab814469b73353[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Thu Feb 19 18:37:58 2026 -0300
+
+    Add budgets and orders
+
+[33mcommit b9adad5c8023ca077b88a599c6e0a7db48167821[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Tue Feb 3 06:14:34 2026 -0300
+
+    chore: remove dev.db from tracking
+
+[33mcommit 7a49f891cb764fe90ddb18d6f74dea23a41fb190[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Tue Feb 3 06:13:40 2026 -0300
+
+    First commit
+
+[33mcommit 79a0d067d62141dbcb5f978ffe1678f980fdb31b[m
+Author: mauricio <jourdanmauricio@gmail.com>
+Date:   Tue Feb 3 06:06:43 2026 -0300
+
+    First commit
