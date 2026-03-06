@@ -11,6 +11,7 @@ export interface BudgetEmailData {
   totalAmount: number;
   items: Array<{
     productName: string;
+    description: string;
     quantity: number;
     price: number;
     amount: number;
@@ -38,25 +39,34 @@ export class MailService {
       return;
     }
 
-    const itemsHtml = data.items.map((i) => `<tr><td>${i.productName}</td><td>${i.quantity}</td><td>$${(i.price / 100).toFixed(2)}</td><td>$${(i.amount / 100).toFixed(2)}</td></tr>`).join('');
+    const itemsHtml = data.items
+      .map(
+        (i) => `
+      <tr>
+        <td>${i.productName}</td>
+        <td>${i.quantity}</td>
+        <td>${i.description}</td>
+      </tr>`,
+      )
+      .join('');
 
     const html = `
-      <h2>Nueva solicitud de presupuesto</h2>
-      <p><strong>Cliente:</strong> ${data.customerName}</p>
+      <h2>PremiArte - Solicitud de presupuesto</h2>
+      <p><strong>Nombre:</strong> ${data.customerName}</p>
       <p><strong>Email:</strong> ${data.customerEmail}</p>
       <p><strong>Teléfono:</strong> ${data.customerPhone}</p>
       <p><strong>Mensaje:</strong> ${data.message || '-'}</p>
       <h3>Productos solicitados</h3>
-      <table border="1" cellpadding="8" cellspacing="0">
-        <thead><tr><th>Producto</th><th>Cantidad</th><th>Precio unit.</th><th>Subtotal</th></tr></thead>
+      <table border="1" cellpadding="8" cellspacing="0" style="width: 90%; margin: 0 auto;">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Descripción</th>
+          </tr>
+        </thead>
         <tbody>${itemsHtml}</tbody>
       </table>
-      <p><strong>Total:</strong> $${(data.totalAmount / 100).toFixed(2)}</p>
-      <br />
-      <p><strong>Recuerda:</strong> asignar un responsable para el seguimiento del presupuesto. </p>
-      <br />
-      <p><strong>Para ver el presupuesto, ingresa a la sección de presupuestos en el panel de administración.</strong></p>
-      <a href="https://premiartedashboard.lumau.com.ar/dashboard/budgets">Panel de administración</a>
     `;
 
     await this.mailer.sendMail({
@@ -75,15 +85,13 @@ export class MailService {
     }
 
     const html = `
-      <h2>Nueva consulta de contacto</h2>
+      <h2>PremiArte - Consulta de contacto</h2>
       <p><strong>Nombre:</strong> ${data.name}</p>
       <p><strong>Email:</strong> <a href="mailto:${data.email}">${data.email}</a></p>
       <p><strong>Teléfono:</strong> ${data.phone || '-'}</p>
       <p><strong>Mensaje:</strong></p>
       <p>${data.message.replace(/\n/g, '<br />')}</p>
       <br />
-      <p><strong>Para ver todas las consultas, ingresa al panel de administración.</strong></p>
-      <a href="https://premiartedashboard.lumau.com.ar/dashboard/contacts">Panel de administración</a>
     `;
 
     await this.mailer.sendMail({

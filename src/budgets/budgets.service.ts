@@ -5,8 +5,8 @@ import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
 import { MailService } from 'src/mail/mail.service';
 
-type BudgetItemWithProduct = { product: { name?: string }; quantity: number; price: number; amount: number };
-type MailBudgetItem = { productName: string; quantity: number; price: number; amount: number };
+type BudgetItemWithProduct = { product: { name?: string; description?: string }; quantity: number; price: number; amount: number };
+type MailBudgetItem = { productName: string; description: string; quantity: number; price: number; amount: number };
 
 /** Normaliza teléfono para búsqueda/guardado: trim y solo dígitos (evita duplicados por "11 5804-6525" vs "1158046525"). */
 function normalizePhone(phone: string | null | undefined): string | null {
@@ -164,6 +164,7 @@ export class BudgetsService {
         const items = (budget.items as BudgetItemWithProduct[]).map(
           (item): MailBudgetItem => ({
             productName: item.product?.name ?? 'Producto',
+            description: item.product?.description ?? '',
             quantity: item.quantity,
             price: item.price,
             amount: item.amount,
