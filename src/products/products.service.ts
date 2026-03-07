@@ -4,12 +4,14 @@ import { UpdateProductDto, UpdateProductPricesDto } from './dto/update-product.d
 import { PrismaService } from 'src/prisma/prisma.service';
 
 interface VariantItem {
+  id?: string;
   sku?: string;
   stock?: number;
   retailPrice?: number;
   wholesalePrice?: number;
   isDefault?: boolean;
-  attributes?: Record<string, string>;
+  attributes?: string[];
+  values?: string[];
 }
 
 @Injectable()

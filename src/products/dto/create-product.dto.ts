@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsString, IsInt, IsBoolean, IsOptional, IsArray, Min, IsDate, ValidateNested, IsObject } from 'class-validator';
+import { IsString, IsInt, IsBoolean, IsOptional, IsArray, Min, IsDate, ValidateNested } from 'class-validator';
 
 /**
  * DTO para agregar una imagen individual a un producto (usado en endpoint POST /products/:id/images)
@@ -23,6 +23,11 @@ export class ProductImageDto {
 }
 
 export class ProductVariantDto {
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ description: 'ID de la variante (UUID, ej. para identificar en el cliente)' })
+  id?: string;
+
   @IsOptional()
   @IsString()
   @ApiPropertyOptional({ description: 'SKU único de la variante' })
@@ -49,12 +54,22 @@ export class ProductVariantDto {
   isDefault?: boolean;
 
   @IsOptional()
-  @IsObject()
+  @IsArray()
+  @IsString({ each: true })
   @ApiPropertyOptional({
-    description: 'Atributos libres de la variante (ej. { "Color": "Azul", "Talle": "M" })',
-    example: { Color: 'Azul', Talle: 'M' },
+    description: 'Nombres de los atributos (ej. ["Medida", "Color"])',
+    example: ['Medida', 'Color'],
   })
-  attributes?: Record<string, string>;
+  attributes?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @ApiPropertyOptional({
+    description: 'Valores de los atributos en el mismo orden que attributes (ej. ["20 cm", "Rojo"])',
+    example: ['20 cm', 'Rojo'],
+  })
+  values?: string[];
 }
 
 export class CreateProductDto {
