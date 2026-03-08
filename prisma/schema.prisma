@@ -38,10 +38,13 @@ model BudgetItem {
   id             Int      @id @default(autoincrement())
   budgetId       String
   productId      Int
+  variantId      String?
   price          Int
   quantity       Int
   amount         Int
   observation    String?
+  attributes     Json?
+  values         Json?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now()) @updatedAt
   retailPrice    Int      @default(0)

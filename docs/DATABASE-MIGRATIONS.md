@@ -142,3 +142,10 @@ npx prisma generate
 2. **Siempre revisa el SQL generado** antes de aplicarlo a producción
 3. **Haz backup antes de migraciones destructivas** (DROP, ALTER que elimina datos)
 4. **El archivo `dev.db` es solo para desarrollo** - puedes eliminarlo y recrearlo si hay problemas
+
+## Migracion TURSO
+
+```bash
+npx prisma generate
+turso db shell premiarte-db < prisma/migrations/20260308184252_add_budget_item_variant_attributes_values/migration.sql
+```

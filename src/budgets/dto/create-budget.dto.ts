@@ -38,6 +38,26 @@ export class CreateBudgetProductItemDto {
   @Type(() => Number)
   quantity?: number;
 
+  /** ID de la variante seleccionada (flujo front). Si viene, se usan precios de la variante. */
+  @ApiPropertyOptional({ description: 'ID de la variante del producto (UUID)', example: '7072131b-6a88-48a9-83d0-58b38e268734', nullable: true })
+  @IsOptional()
+  @IsString()
+  variantId?: string | null;
+
+  /** Nombres de atributos de la variante (ej. ["Medida", "Color"]). Viene cuando variantId está presente. */
+  @ApiPropertyOptional({ description: 'Atributos de la variante', example: ['Medida', 'Color'], nullable: true })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  attributes?: string[] | null;
+
+  /** Valores de la variante (ej. ["20 cm", "Plata"]). Viene cuando variantId está presente. */
+  @ApiPropertyOptional({ description: 'Valores de la variante', example: ['20 cm', 'Plata'], nullable: true })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  values?: string[] | null;
+
   /** Precio unitario en centavos (flujo dashboard). */
   @ApiPropertyOptional({ description: 'Precio unitario en centavos', example: 1500 })
   @IsInt()

@@ -8,6 +8,8 @@ import { MailService } from 'src/mail/mail.service';
 type BudgetItemWithProduct = { product: { name?: string; description?: string }; quantity: number; price: number; amount: number };
 type MailBudgetItem = { productName: string; description: string; quantity: number; price: number; amount: number };
 
+type ProductVariant = { id: string; retailPrice: number; wholesalePrice: number };
+
 /** Normaliza teléfono para búsqueda/guardado: trim y solo dígitos (evita duplicados por "11 5804-6525" vs "1158046525"). */
 function normalizePhone(phone: string | null | undefined): string | null {
   if (phone == null || phone === '') return null;
@@ -84,7 +86,7 @@ export class BudgetsService {
 
     const dbProducts = await this.prisma.client.product.findMany({
       where: { id: { in: productIds } },
-      select: { id: true, retailPrice: true, wholesalePrice: true },
+      select: { id: true, retailPrice: true, wholesalePrice: true, variants: true },
     });
 
     if (dbProducts.length !== productIds.length) {
@@ -100,6 +102,22 @@ export class BudgetsService {
     const itemsData = products.map((item) => {
       const productId = parseInt(String(item.id ?? item.productId), 10);
       const product = productMap.get(productId)!;
+      let retailPrice: number;
+      let wholesalePrice: number;
+      if (item.variantId) {
+        const variants = (product.variants as ProductVariant[] | null) ?? [];
+        const variant = variants.find((v) => v.id === item.variantId);
+        if (variant) {
+          retailPrice = Number(variant.retailPrice);
+          wholesalePrice = Number(variant.wholesalePrice);
+        } else {
+          retailPrice = 0;
+          wholesalePrice = 0;
+        }
+      } else {
+        retailPrice = Number(product.retailPrice);
+        wholesalePrice = Number(product.wholesalePrice);
+      }
       let price: number;
       let quantity: number;
       let amount: number;
@@ -108,7 +126,7 @@ export class BudgetsService {
         amount = Number(item.amount);
         quantity = item.quantity ?? (price > 0 ? Math.round(amount / price) : 1);
       } else {
-        price = customer.type === 'retail' ? Number(product.retailPrice) : Number(product.wholesalePrice);
+        price = customer.type === 'retail' ? retailPrice : wholesalePrice;
         quantity = item.quantity ?? 1;
         amount = price * quantity;
       }
@@ -116,12 +134,15 @@ export class BudgetsService {
 
       return {
         productId,
+        variantId: item.variantId ?? undefined,
         price,
         quantity,
         amount,
-        retailPrice: product.retailPrice,
-        wholesalePrice: product.wholesalePrice,
+        retailPrice,
+        wholesalePrice,
         observation: item.observation ?? undefined,
+        attributes: item.attributes ?? undefined,
+        values: item.values ?? undefined,
       };
     });
 
@@ -236,6 +257,48 @@ export class BudgetsService {
 
     const scalarData = Object.fromEntries(Object.entries(scalarFields).filter(([, v]) => v !== undefined)) as Prisma.BudgetUpdateInput;
 
+    let itemsCreate: Prisma.BudgetItemUncheckedCreateWithoutBudgetInput[] | undefined;
+    if (products != null && products.length > 0) {
+      const productIds = products.map((p) => parseInt(String(p.id ?? p.productId), 10));
+      const dbProducts = await this.prisma.client.product.findMany({
+        where: { id: { in: productIds } },
+        select: { id: true, retailPrice: true, wholesalePrice: true, variants: true },
+      });
+      const productMap = new Map(dbProducts.map((p) => [p.id, p]));
+
+      itemsCreate = products.map((item) => {
+        const productId = parseInt(String(item.id ?? item.productId), 10);
+        const product = productMap.get(productId);
+        let retailPrice = 0;
+        let wholesalePrice = 0;
+        if (product) {
+          if (item.variantId) {
+            const variants = (product.variants as ProductVariant[] | null) ?? [];
+            const variant = variants.find((v) => v.id === item.variantId);
+            if (variant) {
+              retailPrice = Number(variant.retailPrice);
+              wholesalePrice = Number(variant.wholesalePrice);
+            }
+          } else {
+            retailPrice = Number(product.retailPrice);
+            wholesalePrice = Number(product.wholesalePrice);
+          }
+        }
+        return {
+          productId,
+          variantId: item.variantId,
+          price: item.price ?? 0,
+          quantity: item.quantity ?? 1,
+          amount: item.amount ?? 0,
+          retailPrice,
+          wholesalePrice,
+          observation: item.observation ?? undefined,
+          attributes: (item.attributes ?? undefined) as Prisma.InputJsonValue | undefined,
+          values: (item.values ?? undefined) as Prisma.InputJsonValue | undefined,
+        };
+      });
+    }
+
     const data: Prisma.BudgetUpdateInput = {
       ...scalarData,
       ...(expiresAt != null && { expiresAt: new Date(expiresAt) }),
@@ -244,19 +307,12 @@ export class BudgetsService {
       ...(customerId != null && {
         customer: { connect: { id: customerId } },
       }),
-      ...(products != null &&
-        products.length > 0 && {
-          items: {
-            deleteMany: {},
-            create: products.map((item) => ({
-              productId: parseInt(String(item.productId), 10),
-              price: item.price ?? 0,
-              quantity: item.quantity ?? 1,
-              amount: item.amount ?? 0,
-              observation: item.observation ?? undefined,
-            })),
-          },
-        }),
+      ...(itemsCreate != null && {
+        items: {
+          deleteMany: {},
+          create: itemsCreate,
+        },
+      }),
     };
 
     return this.prisma.client.budget.update({
