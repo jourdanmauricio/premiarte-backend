@@ -36,6 +36,9 @@ export class CategoriesService {
       where: {
         ...(options?.isFeatured !== undefined && { featured: options.isFeatured }),
       },
+      orderBy: {
+        name: 'asc',
+      },
       select: {
         id: true,
         name: true,
