@@ -10,6 +10,9 @@ export class OrderItemEntity {
   @ApiProperty({ description: 'ID del producto' })
   productId: number;
 
+  @ApiPropertyOptional({ description: 'ID de la variante seleccionada (UUID)', nullable: true })
+  variantId?: string | null;
+
   @ApiProperty({ description: 'Precio unitario en centavos al momento del pedido' })
   price: number;
 
@@ -27,6 +30,12 @@ export class OrderItemEntity {
 
   @ApiPropertyOptional({ description: 'Observación del ítem' })
   observation?: string | null;
+
+  @ApiPropertyOptional({ description: 'Atributos de la variante (ej. ["Medida", "Color"])', nullable: true })
+  attributes?: string[] | null;
+
+  @ApiPropertyOptional({ description: 'Valores de la variante (ej. ["20 cm", "Plata"])', nullable: true })
+  values?: string[] | null;
 
   @ApiProperty({ description: 'Fecha de creación' })
   createdAt: Date;

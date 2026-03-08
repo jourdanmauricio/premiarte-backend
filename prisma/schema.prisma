@@ -138,12 +138,15 @@ model OrderItem {
   id             Int      @id @default(autoincrement())
   orderId        String
   productId      Int
+  variantId      String?
   price          Int
   retailPrice    Int
   wholesalePrice Int
   quantity       Int
   amount         Int
   observation    String?
+  attributes     Json?
+  values         Json?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now()) @updatedAt
   order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)

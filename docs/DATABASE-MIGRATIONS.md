@@ -147,5 +147,5 @@ npx prisma generate
 
 ```bash
 npx prisma generate
-turso db shell premiarte-db < prisma/migrations/20260308184252_add_budget_item_variant_attributes_values/migration.sql
+turso db shell premiarte-db < prisma/migrations/20260308203330_add_order_item_variant_attributes_values/migration.sql
 ```

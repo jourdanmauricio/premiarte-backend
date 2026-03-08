@@ -9,6 +9,11 @@ export class CreateOrderItemDto {
   @Type(() => Number)
   productId: number;
 
+  @ApiPropertyOptional({ description: 'ID de la variante del producto (UUID)', nullable: true })
+  @IsString()
+  @IsOptional()
+  variantId?: string | null;
+
   @ApiProperty({ description: 'Cantidad', example: 2, minimum: 1 })
   @IsInt()
   @Min(1)
@@ -43,6 +48,18 @@ export class CreateOrderItemDto {
   @IsString()
   @IsOptional()
   observation?: string;
+
+  @ApiPropertyOptional({ description: 'Atributos de la variante (ej. ["Medida", "Color"])', nullable: true })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  attributes?: string[] | null;
+
+  @ApiPropertyOptional({ description: 'Valores de la variante (ej. ["20 cm", "Plata"])', nullable: true })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  values?: string[] | null;
 }
 
 export class CreateOrderDto {

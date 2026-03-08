@@ -36,12 +36,15 @@ export class OrdersService {
 
     const itemsData = products.map((item) => ({
       productId: item.productId,
+      variantId: item.variantId as string | undefined,
       price: item.price,
       retailPrice: item.retailPrice,
       wholesalePrice: item.wholesalePrice,
       quantity: item.quantity,
       amount: item.amount,
       observation: item.observation ?? undefined,
+      attributes: (item.attributes ?? undefined) as Prisma.InputJsonValue | undefined,
+      values: (item.values ?? undefined) as Prisma.InputJsonValue | undefined,
     }));
 
     return this.prisma.client.order.create({
@@ -111,10 +114,10 @@ export class OrdersService {
     let data: Prisma.OrderUpdateInput = { ...scalarData };
 
     if (products != null && products.length > 0) {
-      if (products.some((i) => i.productId == null)) {
-        throw new BadRequestException('Cada ítem debe incluir productId');
+      if (products.some((i) => i.id == null && i.productId == null)) {
+        throw new BadRequestException('Cada ítem debe incluir id o productId');
       }
-      const productIds = products.map((i) => parseInt(String(i.productId), 10));
+      const productIds = products.map((i) => parseInt(String(i.id ?? i.productId), 10));
       const dbProducts = await this.prisma.client.product.findMany({
         where: { id: { in: productIds } },
         select: { id: true },
@@ -132,18 +135,21 @@ export class OrdersService {
       }
 
       const itemsCreate = products.map((item) => {
-        const productId = parseInt(String(item.productId), 10);
+        const productId = parseInt(String(item.id ?? item.productId), 10);
         if (item.price == null || item.quantity == null || item.amount == null || item.retailPrice == null || item.wholesalePrice == null) {
           throw new BadRequestException('Cada ítem debe incluir price, quantity, amount, retailPrice y wholesalePrice (enviados por el front)');
         }
         return {
           productId,
+          variantId: item.variantId as string | undefined,
           price: item.price,
           retailPrice: item.retailPrice,
           wholesalePrice: item.wholesalePrice,
           quantity: item.quantity,
           amount: item.amount,
           observation: item.observation ?? undefined,
+          attributes: (item.attributes ?? undefined) as Prisma.InputJsonValue | undefined,
+          values: (item.values ?? undefined) as Prisma.InputJsonValue | undefined,
         };
       });
 

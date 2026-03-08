@@ -6,7 +6,27 @@ export class UpdateOrderProductItemDto {
   @ApiPropertyOptional({ description: 'ID del producto', example: 258 })
   @IsNumberString()
   @IsOptional()
+  id?: string;
+
+  @ApiPropertyOptional({ description: 'ID del producto (alternativa a id)', example: 258 })
+  @IsNumberString()
+  @IsOptional()
   productId?: string;
+
+  @ApiPropertyOptional({ description: 'Nombre del producto (informativo)' })
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @ApiPropertyOptional({ description: 'Slug del producto (informativo)' })
+  @IsString()
+  @IsOptional()
+  slug?: string;
+
+  @ApiPropertyOptional({ description: 'URL de la imagen del producto (informativo)' })
+  @IsString()
+  @IsOptional()
+  image?: string;
 
   @ApiPropertyOptional({ description: 'Cantidad solicitada', example: 7, minimum: 1 })
   @IsInt()
@@ -15,7 +35,23 @@ export class UpdateOrderProductItemDto {
   @IsOptional()
   quantity?: number;
 
-  @ApiPropertyOptional({ description: 'Cantidad solicitada', example: 7, minimum: 1 })
+  @ApiPropertyOptional({ description: 'ID de la variante del producto (UUID)', nullable: true })
+  @IsString()
+  @IsOptional()
+  variantId?: string | null;
+
+  @ApiPropertyOptional({ description: 'Atributos de la variante (ej. ["Medida", "Color"])', nullable: true })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  attributes?: string[] | null;
+
+  @ApiPropertyOptional({ description: 'Valores de la variante (ej. ["20 cm", "Plata"])', nullable: true })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  values?: string[] | null;
+
   @ApiPropertyOptional({ description: 'Precio unitario en centavos al momento de la cotización' })
   @IsInt()
   @IsOptional()
