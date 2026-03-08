@@ -84,14 +84,15 @@ export class BudgetsService {
       throw new BadRequestException('IDs de producto inválidos: cada ítem debe tener id o productId');
     }
 
+    const uniqueProductIds = [...new Set(productIds)];
     const dbProducts = await this.prisma.client.product.findMany({
-      where: { id: { in: productIds } },
+      where: { id: { in: uniqueProductIds } },
       select: { id: true, retailPrice: true, wholesalePrice: true, variants: true },
     });
 
-    if (dbProducts.length !== productIds.length) {
+    if (dbProducts.length !== uniqueProductIds.length) {
       const foundIds = new Set(dbProducts.map((p) => p.id));
-      const missing = productIds.filter((id) => !foundIds.has(id));
+      const missing = uniqueProductIds.filter((id) => !foundIds.has(id));
       throw new BadRequestException(`Productos no encontrados: ${missing.join(', ')}`);
     }
 
