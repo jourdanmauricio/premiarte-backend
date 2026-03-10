@@ -49,6 +49,11 @@ export class CreateOrderItemDto {
   @IsOptional()
   observation?: string;
 
+  @ApiPropertyOptional({ description: 'Texto personalizado del ítem (front)', example: 'Nombre del cumpleañero, frase, etc.' })
+  @IsString()
+  @IsOptional()
+  customText?: string;
+
   @ApiPropertyOptional({ description: 'Atributos de la variante (ej. ["Medida", "Color"])', nullable: true })
   @IsOptional()
   @IsArray()

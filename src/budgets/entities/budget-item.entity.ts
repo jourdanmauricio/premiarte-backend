@@ -31,6 +31,9 @@ export class BudgetItemEntity {
   @ApiPropertyOptional({ description: 'Observación del ítem' })
   observation?: string | null;
 
+  @ApiPropertyOptional({ description: 'Texto personalizado para productos personalizables', nullable: true })
+  customText?: string | null;
+
   @ApiPropertyOptional({ description: 'Atributos de la variante (ej. ["Medida", "Color"])', nullable: true })
   attributes?: string[] | null;
 

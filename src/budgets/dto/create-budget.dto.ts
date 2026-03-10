@@ -77,6 +77,12 @@ export class CreateBudgetProductItemDto {
   @IsString()
   @IsOptional()
   observation?: string;
+
+  /** Texto personalizado enviado desde el front para productos personalizables. */
+  @ApiPropertyOptional({ description: 'Texto personalizado del ítem (front)', example: 'Nombre del cumpleañero, frase, etc.' })
+  @IsString()
+  @IsOptional()
+  customText?: string;
 }
 
 export class CreateBudgetDto {

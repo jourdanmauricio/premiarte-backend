@@ -96,6 +96,11 @@ export class CreateProductDto {
   @ApiPropertyOptional({ description: 'Indica si el producto es destacado', default: false })
   isFeatured?: boolean;
 
+  @IsBoolean()
+  @IsOptional()
+  @ApiPropertyOptional({ description: 'Indica si el producto admite personalización', default: false })
+  isCustomizable?: boolean;
+
   @IsInt()
   @Min(0)
   @ApiProperty({ description: 'Precio minorista en centavos' })

@@ -139,6 +139,7 @@ export class ProductsService {
       stock: true,
       isActive: true,
       isFeatured: true,
+      isCustomizable: true,
       retailPrice: true,
       wholesalePrice: true,
       slug: true,

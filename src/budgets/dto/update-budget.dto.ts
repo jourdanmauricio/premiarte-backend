@@ -63,6 +63,11 @@ export class UpdateBudgetProductItemDto {
   @IsOptional()
   observation?: string;
 
+  @ApiPropertyOptional({ description: 'Texto personalizado del ítem (front)', example: 'Nombre del cumpleañero, frase, etc.' })
+  @IsString()
+  @IsOptional()
+  customText?: string;
+
   @ApiPropertyOptional({ description: 'Precio unitario en centavos' })
   @IsInt()
   @IsOptional()

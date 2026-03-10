@@ -43,6 +43,7 @@ export class OrdersService {
       quantity: item.quantity,
       amount: item.amount,
       observation: item.observation ?? undefined,
+      customText: item.customText ?? undefined,
       attributes: (item.attributes ?? undefined) as Prisma.InputJsonValue | undefined,
       values: (item.values ?? undefined) as Prisma.InputJsonValue | undefined,
     }));
@@ -148,6 +149,7 @@ export class OrdersService {
           quantity: item.quantity,
           amount: item.amount,
           observation: item.observation ?? undefined,
+          customText: item.customText ?? undefined,
           attributes: (item.attributes ?? undefined) as Prisma.InputJsonValue | undefined,
           values: (item.values ?? undefined) as Prisma.InputJsonValue | undefined,
         };

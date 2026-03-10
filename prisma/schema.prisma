@@ -43,6 +43,7 @@ model BudgetItem {
   quantity       Int
   amount         Int
   observation    String?
+  customText     String?
   attributes     Json?
   values         Json?
   createdAt      DateTime @default(now())
@@ -145,6 +146,7 @@ model OrderItem {
   quantity       Int
   amount         Int
   observation    String?
+  customText     String?
   attributes     Json?
   values         Json?
   createdAt      DateTime @default(now())
@@ -162,6 +164,7 @@ model Product {
   stock          Int
   isActive       Boolean          @default(true)
   isFeatured     Boolean          @default(false)
+  isCustomizable Boolean          @default(false)
   retailPrice    Int
   wholesalePrice Int
   slug           String           @unique

@@ -142,6 +142,7 @@ export class BudgetsService {
         retailPrice,
         wholesalePrice,
         observation: item.observation ?? undefined,
+        customText: item.customText ?? undefined,
         attributes: item.attributes ?? undefined,
         values: item.values ?? undefined,
       };
@@ -294,6 +295,7 @@ export class BudgetsService {
           retailPrice,
           wholesalePrice,
           observation: item.observation ?? undefined,
+          customText: item.customText ?? undefined,
           attributes: (item.attributes ?? undefined) as Prisma.InputJsonValue | undefined,
           values: (item.values ?? undefined) as Prisma.InputJsonValue | undefined,
         };

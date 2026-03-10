@@ -77,6 +77,9 @@ export class ProductEntity {
   @ApiProperty({ description: 'Indica si el producto es destacado' })
   isFeatured: boolean;
 
+  @ApiProperty({ description: 'Indica si el producto admite personalización' })
+  isCustomizable: boolean;
+
   @ApiProperty({ description: 'Precio minorista en centavos' })
   retailPrice: number;
 

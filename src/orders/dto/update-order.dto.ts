@@ -72,6 +72,11 @@ export class UpdateOrderProductItemDto {
   @IsOptional()
   observation?: string;
 
+  @ApiPropertyOptional({ description: 'Texto personalizado del ítem (front)', example: 'Nombre del cumpleañero, frase, etc.' })
+  @IsString()
+  @IsOptional()
+  customText?: string;
+
   @ApiPropertyOptional({ description: 'Precio unitario en centavos al momento de la cotización' })
   @IsInt()
   @IsOptional()
