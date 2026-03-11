@@ -31,7 +31,7 @@ export class ProductsController {
   @ApiResponse({ status: 200, description: 'Lista de productos', type: [ProductEntity] })
   findAll(@Query('isActive') isActive?: string, @Query('isFeatured') isFeatured?: string, @Query('category') category?: string, @Query('page') page?: string, @Query('query') query?: string) {
     return this.productsService.findAll({
-      isActive: isActive !== undefined ? isActive === 'true' : undefined,
+      isActive: isActive !== undefined ? isActive === 'true' : true,
       isFeatured: isFeatured !== undefined ? isFeatured === 'true' : undefined,
       category: category !== undefined ? category : undefined,
       page: page !== undefined ? page : undefined,
