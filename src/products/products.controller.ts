@@ -27,13 +27,15 @@ export class ProductsController {
   @ApiQuery({ name: 'isFeatured', required: false, type: Boolean, description: 'Filtrar por productos destacados' })
   @ApiQuery({ name: 'category', required: false, type: String, description: 'Filtrar por categoría' })
   @ApiQuery({ name: 'page', required: false, type: String, description: 'Filtrar por página' })
+  @ApiQuery({ name: 'query', required: false, type: String, description: 'Filtrar por query' })
   @ApiResponse({ status: 200, description: 'Lista de productos', type: [ProductEntity] })
-  findAll(@Query('isActive') isActive?: string, @Query('isFeatured') isFeatured?: string, @Query('category') category?: string, @Query('page') page?: string) {
+  findAll(@Query('isActive') isActive?: string, @Query('isFeatured') isFeatured?: string, @Query('category') category?: string, @Query('page') page?: string, @Query('query') query?: string) {
     return this.productsService.findAll({
       isActive: isActive !== undefined ? isActive === 'true' : undefined,
       isFeatured: isFeatured !== undefined ? isFeatured === 'true' : undefined,
       category: category !== undefined ? category : undefined,
       page: page !== undefined ? page : undefined,
+      query: query !== undefined ? query : undefined,
     });
   }
 

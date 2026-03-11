@@ -123,12 +123,15 @@ export class ProductsService {
     return this.findOne(product.id);
   }
 
-  async findAll(options?: { isActive?: boolean; isFeatured?: boolean; category?: string; page?: string }) {
+  async findAll(options?: { isActive?: boolean; isFeatured?: boolean; category?: string; page?: string; query?: string }) {
     const where = {
       isActive: options?.isActive,
       isFeatured: options?.isFeatured,
       ...(options?.category && {
         categories: { some: { category: { slug: options.category } } },
+      }),
+      ...(options?.query && {
+        name: { contains: options.query },
       }),
     };
 
